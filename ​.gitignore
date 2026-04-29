@@ -1,6 +1,0 @@
-# File rahasia
-.env
-# Folder sampah dan hasil build
-node_modules/
-dist/
-.DS_Store
