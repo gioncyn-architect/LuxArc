@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>LuxArc AI — Professional Suite</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+  <div class="logo">LuxArc <span>AI</span></div>
+  <div class="nav-actions">
+    <button class="nav-btn" onclick="openLookbook()" title="Virtual Lookbook">📸</button>
+    <button class="nav-btn" onclick="openWishlist()" title="Wishlist">🤍</button>
+    <button class="nav-btn" onclick="openAdmin()" title="Dashboard">⚙️</button>
+    <button class="nav-btn" onclick="openCheckout()">
+      🛒 <span class="cart-badge" id="cart-count">0</span>
+    </button>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-bg"></div>
+  <p class="hero-label">Exclusive Business Suite</p>
+  <h1>Selamat Datang,<br><em>Vivi.</em></h1>
+  <p class="hero-sub">AI Style Advisor · Smart Inventory · Business Intelligence</p>
+  <div class="hero-stats">
+    <div class="stat-pill"><span class="stat-dot"></span>Live <b>AI</b></div>
+    <div class="stat-pill">💎 <b>2</b> Koleksi</div>
+    <div class="stat-pill">📦 <b>5</b> Stok</div>
+  </div>
+</div>
+
+<div class="search-wrap">
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input
+      type="text"
+      class="search-input"
+      id="search-input"
+      placeholder="Cari koleksi atau gaya..."
+      oninput="handleSearch(this)"
+      autocomplete="off"
+      autocorrect="off"
+      spellcheck="false"
+    >
+    <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
+  </div>
+  <div class="filter-chips">
+    <button class="chip active" data-filter="all" onclick="filterProducts('all', this)">Semua</button>
+    <button class="chip" data-filter="tersedia" onclick="filterProducts('tersedia', this)">Tersedia</button>
+    <button class="chip" data-filter="aksesori" onclick="filterProducts('aksesori', this)">Aksesori</button>
+    <button class="chip" data-filter="eyewear" onclick="filterProducts('eyewear', this)">Eyewear</button>
+    <button class="chip" data-filter="headwear" onclick="filterProducts('headwear', this)">Headwear</button>
+  </div>
+</div>
+
+<div class="section-header">
+  <span class="section-title">Koleksi</span>
+  <span class="section-count" id="product-count">2 produk</span>
+</div>
+
+<div class="product-grid" id="products">
+
+  <div class="product-card" data-name="onyx vision pro" data-cat="eyewear tersedia" data-id="p1">
+    <div class="product-img-wrap">
+      🕶️
+    </div>
+    <button class="wishlist-btn" onclick="toggleWishlist(this, 'Onyx Vision Pro')" title="Tambah ke Wishlist">🤍</button>
+    <div class="product-body">
+      <div class="product-meta">
+        <div>
+          <div class="product-name">Onyx Vision Pro</div>
+          <div class="product-sub">Premium Smart Eyewear · Limited</div>
+        </div>
+        <span class="stock-tag in">5 ada</span>
+      </div>
+      <div class="product-rating">
+        <span class="stars">★★★★★</span>
+        <span class="rating-count">4.9 (128 ulasan)</span>
+      </div>
+      <div class="product-price">$<span>450</span><span>.00</span></div>
+      <div class="actions">
+        <div class="actions-row">
+          <button class="btn btn-ghost" onclick="openCamera()">✨ Coba Live</button>
+          <button class="btn btn-white" onclick="addToCart('Onyx Vision Pro', 450, 5)">+ Keranjang</button>
+        </div>
+        <button class="btn btn-gold" onclick="openAIModal('Onyx Vision Pro')">🤖 Minta Saran AI</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="product-card" data-name="royal gold fedora" data-cat="headwear" data-id="p2">
+    <div class="product-img-wrap" style="background: linear-gradient(135deg, #1a1611, #2a2010);">
+      🎩
+    </div>
+    <button class="wishlist-btn" onclick="toggleWishlist(this, 'Royal Gold Fedora')" title="Tambah ke Wishlist">🤍</button>
+    <div class="product-body">
+      <div class="product-meta">
+        <div>
+          <div class="product-name">Royal Gold Fedora</div>
+          <div class="product-sub">Handmade Italian Silk · Exclusive</div>
+        </div>
+        <span class="stock-tag out">Habis</span>
+      </div>
+      <div class="product-rating">
+        <span class="stars">★★★★☆</span>
+        <span class="rating-count">4.7 (84 ulasan)</span>
+      </div>
+      <div class="product-price">$<span>120</span><span>.00</span></div>
+      <div class="actions">
+        <div class="actions-row">
+          <button class="btn btn-ghost" onclick="openCamera()">✨ Coba Live</button>
+          <button class="btn btn-white" disabled>Stok Habis</button>
+        </div>
+        <button class="btn btn-gold" onclick="openAIModal('Royal Gold Fedora')">🤖 Minta Saran AI</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast-stack"></div>
+
+<div class="bottom-nav">
+  <button class="bnav-btn active" onclick="scrollToTop()">
+    <span class="icon">🏠</span>Beranda
+  </button>
+  <button class="bnav-btn" onclick="openCheckout()">
+    <span class="icon">🛒</span>Keranjang
+  </button>
+  <button class="bnav-btn" onclick="openAIModal('')">
+    <span class="icon">🤖</span>AI Advisor
+  </button>
+  <button class="bnav-btn" onclick="openLookbook()">
+    <span class="icon">📸</span>Lookbook
+  </button>
+  <button class="bnav-btn" onclick="openAdmin()">
+    <span class="icon">⚙️</span>Dashboard
+  </button>
+</div>
+
+<div id="camera-view" class="modal">
+  <video id="video-stream" autoplay playsinline muted></video>
+  <canvas id="snapshot-canvas"></canvas>
+  <div class="cam-frame"></div>
+  <div class="cam-ui">
+    <p class="cam-hint">Posisikan wajah dalam bingkai untuk<br>mencoba produk secara virtual</p>
+    <div class="cam-actions">
+      <button class="cam-btn-side" onclick="closeCamera()">✕</button>
+      <button class="cam-btn-main" onclick="takeSnapshot()">📸</button>
+      <button class="cam-btn-side" onclick="flipCamera()">🔄</button>
+    </div>
+  </div>
+</div>
+
+<div id="ai-modal" class="modal">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <button class="modal-close" onclick="closeAIModal()">✕</button>
+
+    <p class="modal-title">AI Style Advisor</p>
+    <p class="modal-sub" id="ai-modal-sub">Ceritakan gaya dan preferensi kamu untuk rekomendasi personal.</p>
+
+    <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+      <label class="field-label">Kunci API (Opsional - Mode BYOK)</label>
+      <span style="font-size:0.65rem; color:var(--gold); margin-bottom:6px;">Juri: Kosongkan untuk Proxy</span>
+    </div>
+    <input 
+      type="password" 
+      id="byok-key" 
+      class="custom-textarea" 
+      style="min-height: 40px; padding: 10px 16px; margin-bottom: 16px;" 
+      placeholder="Masukkan API Key (Opsional)..."
+      autocomplete="off"
+    >
+
+    <label class="field-label">Gaya yang kamu inginkan</label>
+    <div class="tone-chips" id="tone-chips">
+      <button class="tone-chip" onclick="addTone(this)">Elegan</button>
+      <button class="tone-chip" onclick="addTone(this)">Kasual</button>
+      <button class="tone-chip" onclick="addTone(this)">Tomboy</button>
+      <button class="tone-chip" onclick="addTone(this)">Minimalis</button>
+      <button class="tone-chip" onclick="addTone(this)">Mewah</button>
+      <button class="tone-chip" onclick="addTone(this)">Streetwear</button>
+    </div>
+
+    <label class="field-label">Deskripsi diri & gaya</label>
+    <textarea
+      class="custom-textarea"
+      id="ai-input"
+      placeholder="Contoh: Saya perempuan, kulit sawo matang, rambut pendek, ingin tampil percaya diri di meeting formal..."
+    ></textarea>
+
+    <button class="btn btn-gold" onclick="analyzeAI()">✨ Analisis Gaya Saya</button>
+
+    <div class="ai-result" id="ai-result">
+      <div class="ai-result-header">
+        <div class="ai-score-ring" id="ai-score">—</div>
+        <div>
+          <div style="font-size:.72rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); margin-bottom:2px;">Cocok dengan Profil Kamu</div>
+          <div style="font-size:.9rem; font-weight:500;" id="ai-product-name">—</div>
+        </div>
+      </div>
+      <div class="ai-result-text" id="ai-text"></div>
+      <div class="divider"></div>
+      <button class="btn btn-ghost" style="width:100%;" onclick="shareResult()">📤 Bagikan ke Sosmed</button>
+    </div>
+
+    <button class="btn btn-ghost" style="margin-top:10px; width:100%;" onclick="closeAIModal()">Batal</button>
+  </div>
+</div>
+
+<div id="checkout-modal" class="modal">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <button class="modal-close" onclick="closeCheckout()">✕</button>
+
+    <p class="modal-title">Keranjang</p>
+    <p class="modal-sub">Review pesanan sebelum melanjutkan pembayaran.</p>
+
+    <div id="cart-items"></div>
+
+    <div id="cart-total-section" style="display:none;">
+      <div class="cart-total-row">
+        <span class="cart-total-label">Total</span>
+        <span class="cart-total-val" id="total-price">$0</span>
+      </div>
+      <div style="margin-top:16px; display:flex; flex-direction:column; gap:8px;">
+        <button class="btn btn-gold" onclick="processPayment()">🔒 Lanjut Pembayaran</button>
+        <button class="btn btn-ghost" onclick="clearCart()">Kosongkan Keranjang</button>
+      </div>
+    </div>
+
+    <button class="btn btn-ghost" style="margin-top:12px; width:100%;" onclick="closeCheckout()">Kembali Belanja</button>
+  </div>
+</div>
+
+<div id="wishlist-modal" class="modal">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <button class="modal-close" onclick="closeWishlist()">✕</button>
+    <p class="modal-title">Wishlist 🤍</p>
+    <p class="modal-sub">Produk yang kamu simpan untuk nanti.</p>
+    <div id="wishlist-items"></div>
+    <button class="btn btn-ghost" style="margin-top:12px; width:100%;" onclick="closeWishlist()">Tutup</button>
+  </div>
+</div>
+
+<div id="lookbook-modal" class="modal">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <button class="modal-close" onclick="closeLookbook()">✕</button>
+    <p class="modal-title">Virtual Lookbook</p>
+    <p class="modal-sub">Koleksi foto percobaan AR kamu.</p>
+    <div id="lookbook-gallery" class="lookbook-grid"></div>
+    <button class="btn btn-ghost" style="margin-top:16px; width:100%;" onclick="closeLookbook()">Tutup</button>
+  </div>
+</div>
+
+<div id="admin-modal" class="modal">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <button class="modal-close" onclick="closeAdmin()">✕</button>
+    <p class="modal-title">Business Dashboard</p>
+    <p class="modal-sub">Ringkasan performa LuxArc — hari ini.</p>
+
+    <div class="dash-grid">
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Pendapatan</div>
+        <div class="dash-kpi-value gold">$1,450</div>
+        <div class="dash-kpi-delta up">↑ 12% vs bulan lalu</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Pesanan</div>
+        <div class="dash-kpi-value">34</div>
+        <div class="dash-kpi-delta up">↑ 5 hari ini</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">AI Consultation</div>
+        <div class="dash-kpi-value">18</div>
+        <div class="dash-kpi-delta up">↑ 3 sesi baru</div>
+      </div>
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Wishlist</div>
+        <div class="dash-kpi-value" id="dash-wishlist-count">0</div>
+        <div class="dash-kpi-delta">item tersimpan</div>
+      </div>
+    </div>
+
+    <div class="dash-alert">
+      <span class="icon">⚠️</span>
+      <span><b>Royal Gold Fedora</b> — Stok habis. 3 permintaan restock hari ini. Pertimbangkan restok segera.</span>
+    </div>
+
+    <div class="dash-activity">
+      <div class="dash-activity-title">Aktivitas Terkini</div>
+      <div class="activity-item">
+        <span class="activity-dot" style="background:var(--green)"></span>
+        <span>Pesanan baru: Onyx Vision Pro</span>
+        <span class="activity-time">2m lalu</span>
+      </div>
+      <div class="activity-item">
+        <span class="activity-dot" style="background:var(--gold)"></span>
+        <span>AI Consultation selesai</span>
+        <span class="activity-time">15m lalu</span>
+      </div>
+      <div class="activity-item">
+        <span class="activity-dot" style="background:var(--red)"></span>
+        <span>Stok Fedora habis</span>
+        <span class="activity-time">1j lalu</span>
+      </div>
+    </div>
+
+    <div class="dash-activity">
+      <div class="dash-activity-title">Tren Penjualan (7 Hari)</div>
+      <div class="mini-chart" id="mini-chart"></div>
+    </div>
+
+    <button class="btn btn-ghost" style="margin-top:16px; width:100%;" onclick="closeAdmin()">Tutup Dashboard</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
