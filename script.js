@@ -1,16 +1,19 @@
-// --- YouCam API Wrapper (PENGATURAN KOMPETISI JURI) ---
-const YOUTHKAM_API_KEY = "MASUKKAN_API_KEY_JURI_DI_SINI"; 
-
+// GANTI BAGIAN ATAS DENGAN INI
 class YouCamService {
-    static init(apiKey) {
-        console.log("YouCam API Initialized with Key:", apiKey);
-        return true;
+    static async init() {
+        try {
+            // Memanggil kunci dari brankas Netlify (Sangat Aman)
+            const response = await fetch('/.netlify/functions/get-youcam-token');
+            const data = await response.json();
+            console.log("YouCam API Berhasil Terhubung secara Rahasia");
+            return data; 
+        } catch (err) {
+            console.error("Gagal mengambil kunci AI:", err);
+        }
     }
     static applyFilter(stream, productId) {
         console.log(`Applying AR Filter for product: ${productId}`);
     }
-}
-YouCamService.init(YOUTHKAM_API_KEY);
 
 // --- State & Variables ---
 let cart = [];
@@ -49,13 +52,17 @@ const translations = {
 };
 
 function formatCurrency(idrAmount) {
+    // Baris ini sangat penting agar tidak muncul NaN lagi
+    const amount = Number(idrAmount) || 0; 
+
     if (currentLang === 'en') {
-        const usdAmount = (idrAmount / EXCHANGE_RATE).toFixed(2);
-        return `$${usdAmount}`;
+        const usdAmount = (amount / EXCHANGE_RATE).toFixed(2);
+        return '$ ' + usdAmount;
     } else {
-        return `Rp ${new Intl.NumberFormat('id-ID').format(idrAmount)}`;
+        return 'Rp ' + new Intl.NumberFormat('id-ID').format(amount);
     }
 }
+
 
 function updatePricesOnScreen() {
     document.querySelectorAll('.product-price').forEach(el => {
