@@ -1,8 +1,6 @@
-// api/youcam.js — Vercel Serverless Function v2
-// Menggunakan URL publik langsung (tidak perlu upload file)
-
+// api/youcam.js — Vercel Serverless Function v3
 const BASE_URL = 'https://yce-api-01.perfectcorp.com';
-// Tambahkan ini di baris paling atas
+
 export const config = {
   api: {
     bodyParser: {
@@ -10,6 +8,7 @@ export const config = {
     },
   },
 };
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -21,6 +20,13 @@ export default async function handler(req, res) {
 
   const { action } = req.query;
   const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  // ✅ Parse body manual jika belum terparsing
+  let body = req.body;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch { body = {}; }
+  }
+  if (!body) body = {};
 
   const HEADERS = {
     'Content-Type': 'application/json',
@@ -44,9 +50,11 @@ export default async function handler(req, res) {
 
     // ── AI Clothes (Virtual Try-On) ───────────────────────────
     if (action === 'ai-clothes') {
-      const { user_image_url, cloth_image_url } = req.body;
+      const { user_image_url, cloth_image_url } = body;
 
-      // Step 1: Start task
+      if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan', body_received: body });
+      if (!cloth_image_url) return res.status(400).json({ error: 'cloth_image_url diperlukan', body_received: body });
+
       const startRes = await fetch(`${BASE_URL}/s2s/v2.0/task/ai-clothes`, {
         method: 'POST',
         headers: HEADERS,
@@ -62,14 +70,15 @@ export default async function handler(req, res) {
       const taskId = startData?.data?.task_id || startData?.task_id;
       if (!taskId) return res.status(500).json({ error: 'Tidak dapat task_id', detail: startData });
 
-      // Step 2: Poll
       const result = await pollTask(taskId, '/s2s/v2.0/task/ai-clothes');
       return res.status(200).json(result);
     }
 
     // ── AI Hairstyle ──────────────────────────────────────────
     if (action === 'ai-hairstyle') {
-      const { user_image_url, style } = req.body;
+      const { user_image_url, style } = body;
+
+      if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
 
       const startRes = await fetch(`${BASE_URL}/s2s/v2.0/task/ai-hairstyle-generator`, {
         method: 'POST',
@@ -91,7 +100,9 @@ export default async function handler(req, res) {
 
     // ── Photo Enhancer ────────────────────────────────────────
     if (action === 'photo-enhance') {
-      const { user_image_url } = req.body;
+      const { user_image_url } = body;
+
+      if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
 
       const startRes = await fetch(`${BASE_URL}/s2s/v2.0/task/photo-enhancer`, {
         method: 'POST',
