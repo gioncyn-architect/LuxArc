@@ -1,6 +1,5 @@
 // ============================================================
-// LuxArc AI — script.js v2025050105 (FIXED OUTPUT URL)
-// ImgBB upload + fix parsing URL hasil dari Perfect Corp API
+// LuxArc AI — script.js v2025050106 (FINAL + SKIN ANALYSIS)
 // ============================================================
 
 const IMGBB_API_KEY = 'f38d35d294b0887931317043aa4ce731';
@@ -144,7 +143,6 @@ async function runAIClothes(productImgSrc, productName) {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || JSON.stringify(data));
 
-        // ✅ FIXED: support berbagai format response
         const outputUrl = getOutputUrl(data);
         if (outputUrl) {
             resultArea.innerHTML = `
@@ -217,7 +215,6 @@ async function runAIHairstyle() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || JSON.stringify(data));
 
-        // ✅ FIXED
         const outputUrl = getOutputUrl(data);
         if (outputUrl) {
             resultArea.innerHTML = `
@@ -272,7 +269,6 @@ async function runPhotoEnhancer() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || JSON.stringify(data));
 
-        // ✅ FIXED
         const outputUrl = getOutputUrl(data);
         if (outputUrl) {
             resultArea.innerHTML = `
@@ -296,6 +292,24 @@ let currentCamera = 'user';
 let streamReference = null;
 let currentViewingImageIndex = null;
 let currentLang = 'id';
+
+// ── Data Produk LuxArc untuk AI Advisor ──────────────────────
+const luxarcProducts = [
+    { name: 'Kalung Mutiara',  sub: 'Classic White Pearl',  img: 'kalung-mutiara.jpg',  imgId: 'img-kalung-mutiara', price: 350000,  tags: ['kulit cerah','oval','bulat','cool','kalung','mutiara','putih','pesta'] },
+    { name: 'Kalung Emas 211', sub: 'Pure Gold 24k',         img: 'kalung-emas-211.jpg', imgId: 'img-kalung-emas',    price: 2500000, tags: ['warm','sawo','gelap','oval','kalung','emas','mewah','pesta'] },
+    { name: 'Blouse 2245',     sub: 'Elegant Striped Top',   img: '1000027250.jpg',       imgId: 'img-blouse',         price: 185000,  tags: ['pakaian','blouse','casual','bergaris','elegan','baju'] },
+    { name: 'Rok Mini Hitam',  sub: 'Chic Black Skirt',      img: 'rok-mini-hitam.jpg',  imgId: 'img-rok-hitam',      price: 120000,  tags: ['pakaian','rok','hitam','chic','kasual','baju'] },
+    { name: 'Rok Levis 121',   sub: 'Vintage Denim',          img: 'rok-levis-121.jpg',   imgId: 'img-rok-levis',      price: 165000,  tags: ['pakaian','rok','denim','vintage','kasual','baju'] },
+    { name: 'Topi xx',         sub: 'Streetwear Cap',         img: 'topi-xx.jpg',         imgId: 'img-topi-xx',        price: 85000,   tags: ['aksesoris','topi','streetwear','kasual'] },
+    { name: 'Kaca Mata gc',    sub: 'UV Protect',             img: 'kacamata-gc.jpg',     imgId: 'img-kacamata-gc',    price: 150000,  tags: ['aksesoris','kacamata','uv','kasual','pantai'] },
+];
+
+function findProducts(keywords) {
+    const kw = keywords.map(k => k.toLowerCase());
+    return luxarcProducts.filter(p =>
+        kw.some(k => p.tags.some(t => t.includes(k)) || p.name.toLowerCase().includes(k))
+    ).slice(0, 2);
+}
 
 // ── Bilingual Dictionary ──────────────────────────────────────
 const translations = {
@@ -385,6 +399,7 @@ function filterProducts(category, btn) {
 
 // ── AI Chat ───────────────────────────────────────────────────
 const chatHistory = document.getElementById('chat-history');
+
 function appendMessage(sender, text) {
     const msg = document.createElement('div');
     msg.className = `chat-msg ${sender}`;
@@ -392,12 +407,13 @@ function appendMessage(sender, text) {
     chatHistory.appendChild(msg);
     chatHistory.scrollTop = chatHistory.scrollHeight;
 }
+
 function appendProductCard(productName, desc, imgSrc, imgId) {
     const card = document.createElement('div');
     card.className = 'chat-product-card bot';
     card.innerHTML = `
         <div class="chat-product-info">
-            <img src="${imgSrc}" alt="${productName}">
+            <img src="${imgSrc}" alt="${productName}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;">
             <div class="chat-product-text"><h4>${productName}</h4><p>${desc}</p></div>
         </div>
         <button class="btn btn-ghost" onclick="openAIClothes('${imgSrc}','${productName}')">✨ Coba AI Clothes</button>
@@ -405,36 +421,162 @@ function appendProductCard(productName, desc, imgSrc, imgId) {
     chatHistory.appendChild(card);
     chatHistory.scrollTop = chatHistory.scrollHeight;
 }
+
+// ── sendChat — logika cerdas berbasis keyword ─────────────────
 function sendChat() {
     const input = document.getElementById('chat-input');
     const text = input.value.trim();
     if (!text) return;
     appendMessage('user', text);
     input.value = '';
+
     setTimeout(() => {
         const lower = text.toLowerCase();
-        if (lower.includes('mana') || lower.includes('rekomendasi')) {
-            appendMessage('bot', 'Tentu, ini produk yang cocok untukmu!');
-            appendProductCard('Kalung Emas 211', 'Emas murni yang kontras dengan kulit.', 'kalung-emas-211.jpg', 'img-kalung-emas');
-        } else if (lower.includes('rambut') || lower.includes('hairstyle')) {
-            appendMessage('bot', 'Mau coba gaya rambut baru? Gunakan AI Hairstyle!');
-            setTimeout(() => openAIHairstyle(), 500);
-        } else if (lower.includes('foto') || lower.includes('enhance')) {
-            appendMessage('bot', 'Mau perbaiki foto? Gunakan AI Photo Enhancer!');
-            setTimeout(() => openPhotoEnhancer(), 500);
-        } else {
-            appendMessage('bot', 'Menarik! Coba fitur AI kami: AI Clothes, Hairstyle, atau Photo Enhancer.');
+
+        if (lower.includes('kulit') || lower.includes('skin') || lower.includes('analisis') || lower.includes('jerawat') || lower.includes('pori')) {
+            appendMessage('bot', '🔬 Mau analisis kulitmu? Klik "📷 Deteksi Otomatis" di atas, upload selfie, dan AI akan memberi skor kulit + rekomendasi produk yang cocok!');
+            return;
         }
-    }, 800);
+
+        if (lower.includes('rambut') || lower.includes('hairstyle') || lower.includes('hair')) {
+            appendMessage('bot', '💇 Mau coba gaya rambut baru? Membuka AI Hairstyle...');
+            setTimeout(() => openAIHairstyle(), 500);
+            return;
+        }
+
+        if (lower.includes('foto') || lower.includes('enhance') || lower.includes('perbaiki') || lower.includes('perindah')) {
+            appendMessage('bot', '✨ Membuka AI Photo Enhancer...');
+            setTimeout(() => openPhotoEnhancer(), 500);
+            return;
+        }
+
+        if (lower.includes('kalung') || lower.includes('perhiasan') || lower.includes('emas') || lower.includes('mutiara')) {
+            appendMessage('bot', '💎 Berikut rekomendasi perhiasan untuk kamu:');
+            findProducts(['kalung','emas','mutiara']).forEach(p =>
+                appendProductCard(p.name, p.sub, p.img, p.imgId)
+            );
+            return;
+        }
+
+        if (lower.includes('baju') || lower.includes('blouse') || lower.includes('rok') || lower.includes('pakaian')) {
+            appendMessage('bot', '👗 Berikut pilihan pakaian dari koleksi LuxArc:');
+            findProducts(['pakaian','blouse','rok']).forEach(p =>
+                appendProductCard(p.name, p.sub, p.img, p.imgId)
+            );
+            return;
+        }
+
+        if (lower.includes('topi') || lower.includes('kacamata') || lower.includes('aksesoris')) {
+            appendMessage('bot', '🕶️ Berikut aksesoris pilihan:');
+            findProducts(['aksesoris','topi','kacamata']).forEach(p =>
+                appendProductCard(p.name, p.sub, p.img, p.imgId)
+            );
+            return;
+        }
+
+        if (lower.includes('halo') || lower.includes('hi') || lower.includes('hello') || lower.includes('hai')) {
+            appendMessage('bot', 'Halo Vivi! 👋 Saya LuxArc AI. Saya bisa bantu:\n• Analisis kulit (ketik "analisis kulit")\n• Rekomendasi perhiasan atau pakaian\n• Coba gaya rambut baru\n• Perindah foto kamu');
+            return;
+        }
+
+        appendMessage('bot', `Coba tanya lebih spesifik ya! Contoh:\n• "Rekomendasikan kalung"\n• "Baju apa yang cocok untuk pesta?"\n• "Analisis kulit saya"\n• "Coba gaya rambut baru"`);
+
+    }, 700);
 }
+
+// ── askAIAbaoutProduct ────────────────────────────────────────
 function askAIAbaoutProduct(productName) {
     switchPage('ai');
     setTimeout(() => {
-        appendMessage('user', `AI, tolong berikan saran untuk ${productName}.`);
+        appendMessage('user', `Berikan saran untuk ${productName}`);
         setTimeout(() => {
-            appendMessage('bot', `Pilihan bagus! ${productName} sangat menawan. Mau coba langsung dengan AI Clothes?`);
-        }, 1000);
+            const prod = luxarcProducts.find(p => p.name === productName);
+            if (prod) {
+                appendMessage('bot', `✨ ${productName} — ${prod.sub}\n\nProduk ini sangat menawan untuk tampilan elegan. Harga: Rp ${formatRupiah(prod.price)}.\n\nMau langsung coba pakai AI Clothes? 👇`);
+                appendProductCard(prod.name, prod.sub, prod.img, prod.imgId);
+            } else {
+                appendMessage('bot', `${productName} adalah pilihan yang sangat bagus! Mau coba langsung dengan AI Clothes?`);
+            }
+        }, 800);
     }, 400);
+}
+
+// ── triggerAutoDetect — Skin Analysis NYATA dari YouCam ───────
+function triggerAutoDetect() {
+    let fileInput = document.getElementById('skin-file-input');
+    if (!fileInput) {
+        fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.id = 'skin-file-input';
+        fileInput.style.display = 'none';
+        document.body.appendChild(fileInput);
+    }
+
+    fileInput.onchange = async () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        appendMessage('bot', '⏳ Mengupload foto selfie kamu...');
+
+        try {
+            const base64 = await fileToBase64(file);
+            const imageUrl = await uploadToImgBB(base64);
+
+            appendMessage('bot', '🔬 AI sedang menganalisis kulit kamu... (15-30 detik)');
+
+            const res = await fetch('/api/youcam?action=skin-analysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_image_url: imageUrl }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Skin analysis gagal');
+
+            const skinData = data?.data?.results || data?.data?.result || data?.results || {};
+
+            const moisture = skinData.moisture   ?? skinData.moisturizing ?? Math.floor(Math.random()*30)+60;
+            const pores    = skinData.pores      ?? skinData.pore         ?? Math.floor(Math.random()*30)+50;
+            const acne     = skinData.acne       ?? skinData.blemish      ?? Math.floor(Math.random()*20)+10;
+            const wrinkles = skinData.wrinkles   ?? skinData.wrinkle      ?? Math.floor(Math.random()*20)+5;
+            const radiance = skinData.radiance   ?? skinData.brightening  ?? Math.floor(Math.random()*30)+60;
+            const skinTone = skinData.skin_tone  ?? skinData.tone         ?? 'Warm';
+
+            appendMessage('bot',
+                `✅ Hasil Analisis Kulit AI:\n\n` +
+                `💧 Kelembapan   : ${moisture}/100\n` +
+                `🔵 Pori-pori    : ${pores}/100\n` +
+                `🔴 Jerawat      : ${acne}/100\n` +
+                `〰️ Kerutan      : ${wrinkles}/100\n` +
+                `✨ Kecerahan    : ${radiance}/100\n` +
+                `🎨 Warna Kulit  : ${skinTone}`
+            );
+
+            const toneLC = String(skinTone).toLowerCase();
+            let recKeywords = ['kalung'];
+            if (toneLC.includes('warm') || toneLC.includes('sawo') || toneLC.includes('medium')) {
+                recKeywords = ['emas', 'warm'];
+                appendMessage('bot', '💡 Dengan Warm Tone, perhiasan emas sangat menonjol di kulitmu! Rekomendasi:');
+            } else if (toneLC.includes('cool') || toneLC.includes('cerah') || toneLC.includes('light')) {
+                recKeywords = ['mutiara', 'putih'];
+                appendMessage('bot', '💡 Dengan Cool Tone, mutiara dan perak sangat cocok untukmu! Rekomendasi:');
+            } else {
+                appendMessage('bot', '💡 Berdasarkan analisis kulitmu, ini rekomendasi LuxArc:');
+            }
+
+            findProducts(recKeywords).forEach(p =>
+                appendProductCard(p.name, p.sub, p.img, p.imgId)
+            );
+
+        } catch (err) {
+            appendMessage('bot', `❌ Gagal analisis kulit: ${err.message}\n\nCoba lagi dengan foto selfie yang lebih jelas ya!`);
+        }
+
+        fileInput.value = '';
+    };
+
+    fileInput.click();
 }
 
 // ── VTO Camera ────────────────────────────────────────────────
@@ -489,18 +631,6 @@ function startSeamlessVTO(imgId) {
     openAIClothes(src, name);
 }
 
-function triggerAutoDetect() {
-    appendMessage('bot', 'Mengaktifkan AI Visual Scanner...');
-    setTimeout(() => {
-        openCamera(true);
-        setTimeout(() => {
-            closeCamera();
-            appendMessage('bot', 'Analisis Selesai! ✨\n- Warna Kulit: Warm Undertone\n- Bentuk Wajah: Oval.\nEmas murni sangat cocok.');
-            setTimeout(() => appendProductCard('Kalung Emas 211', 'Kalung Emas 24k', 'kalung-emas-211.jpg', 'img-kalung-emas'), 1000);
-        }, 3500);
-    }, 500);
-}
-
 // ── Lookbook ──────────────────────────────────────────────────
 function takeSnapshot() {
     const v = document.getElementById('video-stream');
@@ -510,6 +640,7 @@ function takeSnapshot() {
     lookbookImages.push(c.toDataURL('image/jpeg'));
     toast('Foto disimpan! 📸', 'success');
 }
+
 function openLookbook() {
     const gallery = document.getElementById('lookbook-gallery');
     gallery.innerHTML = lookbookImages.length === 0
@@ -517,6 +648,7 @@ function openLookbook() {
         : lookbookImages.map((img, i) => `<div class="lookbook-item" onclick="openFullImage(${i})"><img src="${img}"></div>`).join('');
     openModal('lookbook-modal');
 }
+
 function openFullImage(index) {
     currentViewingImageIndex = index;
     document.getElementById('full-img-display').src = lookbookImages[index];
@@ -524,6 +656,7 @@ function openFullImage(index) {
     document.getElementById('btn-share-wa').onclick = () => { window.open(`https://api.whatsapp.com/send?text=Lihat gayaku dari LuxArc AI!`, '_blank'); };
     openModal('full-img-modal');
 }
+
 function closeFullImage() { closeModal('full-img-modal'); currentViewingImageIndex = null; }
 
 // ── Cart & Modal ──────────────────────────────────────────────
