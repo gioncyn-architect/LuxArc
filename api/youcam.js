@@ -1,4 +1,4 @@
-// api/youcam.js — Vercel Serverless Function v5 (FIXED ENDPOINT)
+// api/youcam.js — Vercel Serverless Function v6 (+ SKIN ANALYSIS)
 const BASE_URL = 'https://yce-api-01.makeupar.com';
 
 export const config = {
@@ -21,7 +21,6 @@ export default async function handler(req, res) {
   const { action } = req.query;
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-  // Parse body manual jika belum terparsing
   let body = req.body;
   if (typeof body === 'string') {
     try { body = JSON.parse(body); } catch { body = {}; }
@@ -33,7 +32,6 @@ export default async function handler(req, res) {
     'Authorization': `Bearer ${apiKey}`,
   };
 
-  // Poll helper
   async function pollTask(taskId, endpoint) {
     for (let i = 0; i < 30; i++) {
       await sleep(2000);
@@ -48,10 +46,29 @@ export default async function handler(req, res) {
 
   try {
 
+    // ── Skin Analysis ─────────────────────────────────────────
+    if (action === 'skin-analysis') {
+      const { user_image_url } = body;
+      if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
+
+      const startRes = await fetch(`${BASE_URL}/s2s/v2.0/task/skin-analysis`, {
+        method: 'POST',
+        headers: HEADERS,
+        body: JSON.stringify({ src_file_url: user_image_url }),
+      });
+      const startData = await startRes.json();
+      if (!startRes.ok) return res.status(startRes.status).json(startData);
+
+      const taskId = startData?.data?.task_id || startData?.task_id;
+      if (!taskId) return res.status(500).json({ error: 'Tidak dapat task_id', detail: startData });
+
+      const result = await pollTask(taskId, '/s2s/v2.0/task/skin-analysis');
+      return res.status(200).json(result);
+    }
+
     // ── AI Clothes (Virtual Try-On) ───────────────────────────
     if (action === 'ai-clothes') {
       const { user_image_url, cloth_image_url } = body;
-
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan', body_received: body });
       if (!cloth_image_url) return res.status(400).json({ error: 'cloth_image_url diperlukan' });
 
@@ -77,7 +94,6 @@ export default async function handler(req, res) {
     // ── AI Hairstyle ──────────────────────────────────────────
     if (action === 'ai-hairstyle') {
       const { user_image_url, style } = body;
-
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
 
       const startRes = await fetch(`${BASE_URL}/s2s/v2.0/task/hair-style`, {
@@ -101,15 +117,12 @@ export default async function handler(req, res) {
     // ── Photo Enhancer ────────────────────────────────────────
     if (action === 'photo-enhance') {
       const { user_image_url } = body;
-
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
 
       const startRes = await fetch(`${BASE_URL}/s2s/v2.0/task/photo-enhancer`, {
         method: 'POST',
         headers: HEADERS,
-        body: JSON.stringify({
-          src_file_url: user_image_url,
-        }),
+        body: JSON.stringify({ src_file_url: user_image_url }),
       });
       const startData = await startRes.json();
       if (!startRes.ok) return res.status(startRes.status).json(startData);
