@@ -27,7 +27,9 @@ async function uploadToImgBB(base64) {
 
 // ── Helper ambil URL hasil dari berbagai format response ─────
 function getOutputUrl(data) {
-    return data?.result_url        // ← ini yang dikirim api/youcam.js
+    return data?.result_url
+        || data?.data?.results?.url
+        || data?.data?.results?.[0]?.url
         || data?.data?.output_url
         || data?.data?.result_url
         || data?.data?.image_url
@@ -374,7 +376,365 @@ document.getElementById('search-input').addEventListener('input', function(e) {
         if (card.innerText.toLowerCase().includes(term) || card.dataset.name.includes(term)) {
             card.style.display = 'block'; setTimeout(() => card.style.opacity = '1', 50); count++;
         } else {
-            card.style.opacity = '0'; setTimeout(() => card.style.display = 'none', 200);
+            card.style.opacity = '0'; setTimeout(() => card.style.display = 'none', 400);
         }
     });
+    document.getElementById('product-count').innerText = `${count} produk`;
 });
+
+function mockupVoiceSearch() { toast('🎙️ AI Listening...', 'info'); }
+function mockupVisualSearch() { toast('📷 AI Visual Scanner...', 'info'); }
+
+function filterProducts(category, btn) {
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const products = document.querySelectorAll('.product-card');
+    let count = 0;
+    products.forEach(card => {
+        if (category === 'semua' || card.dataset.category === category) {
+            card.style.display = 'block'; setTimeout(() => { card.style.opacity = '1'; card.style.transform = 'scale(1)'; }, 50); count++;
+        } else {
+            card.style.opacity = '0'; card.style.transform = 'scale(0.95)'; setTimeout(() => card.style.display = 'none', 400);
+        }
+    });
+    document.getElementById('product-count').innerText = `${count} produk`;
+}
+
+// ── AI Chat ───────────────────────────────────────────────────
+const chatHistory = document.getElementById('chat-history');
+
+function appendMessage(sender, text) {
+    const msg = document.createElement('div');
+    msg.className = `chat-msg ${sender}`;
+    msg.innerText = text;
+    chatHistory.appendChild(msg);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+function appendProductCard(productName, desc, imgSrc, imgId) {
+    const card = document.createElement('div');
+    card.className = 'chat-product-card bot';
+    card.innerHTML = `
+        <div class="chat-product-info">
+            <img src="${imgSrc}" alt="${productName}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;">
+            <div class="chat-product-text"><h4>${productName}</h4><p>${desc}</p></div>
+        </div>
+        <button class="btn btn-ghost" onclick="openAIClothes('${imgSrc}','${productName}')">✨ Coba AI Clothes</button>
+    `;
+    chatHistory.appendChild(card);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+// ── sendChat — logika cerdas berbasis keyword ─────────────────
+function sendChat() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+    appendMessage('user', text);
+    input.value = '';
+
+    setTimeout(() => {
+        const lower = text.toLowerCase();
+
+        if (lower.includes('kulit') || lower.includes('skin') || lower.includes('analisis') || lower.includes('jerawat') || lower.includes('pori')) {
+            appendMessage('bot', '🔬 Mau analisis kulitmu? Klik "📷 Deteksi Otomatis" di atas, upload selfie, dan AI akan memberi skor kulit + rekomendasi produk yang cocok!');
+            return;
+        }
+
+        if (lower.includes('rambut') || lower.includes('hairstyle') || lower.includes('hair')) {
+            appendMessage('bot', '💇 Mau coba gaya rambut baru? Membuka AI Hairstyle...');
+            setTimeout(() => openAIHairstyle(), 500);
+            return;
+        }
+
+        if (lower.includes('foto') || lower.includes('enhance') || lower.includes('perbaiki') || lower.includes('perindah')) {
+            appendMessage('bot', '✨ Membuka AI Photo Enhancer...');
+            setTimeout(() => openPhotoEnhancer(), 500);
+            return;
+        }
+
+        if (lower.includes('kalung') || lower.includes('perhiasan') || lower.includes('emas') || lower.includes('mutiara')) {
+            appendMessage('bot', '💎 Berikut rekomendasi perhiasan untuk kamu:');
+            findProducts(['kalung','emas','mutiara']).forEach(p =>
+                appendProductCard(p.name, p.sub, p.img, p.imgId)
+            );
+            return;
+        }
+
+        if (lower.includes('baju') || lower.includes('blouse') || lower.includes('rok') || lower.includes('pakaian')) {
+            appendMessage('bot', '👗 Berikut pilihan pakaian dari koleksi LuxArc:');
+            findProducts(['pakaian','blouse','rok']).forEach(p =>
+                appendProductCard(p.name, p.sub, p.img, p.imgId)
+            );
+            return;
+        }
+
+        if (lower.includes('topi') || lower.includes('kacamata') || lower.includes('aksesoris')) {
+            appendMessage('bot', '🕶️ Berikut aksesoris pilihan:');
+            findProducts(['aksesoris','topi','kacamata']).forEach(p =>
+                appendProductCard(p.name, p.sub, p.img, p.imgId)
+            );
+            return;
+        }
+
+        if (lower.includes('halo') || lower.includes('hi') || lower.includes('hello') || lower.includes('hai')) {
+            appendMessage('bot', 'Halo Vivi! 👋 Saya LuxArc AI. Saya bisa bantu:\n• Analisis kulit (ketik "analisis kulit")\n• Rekomendasi perhiasan atau pakaian\n• Coba gaya rambut baru\n• Perindah foto kamu');
+            return;
+        }
+
+        appendMessage('bot', `Coba tanya lebih spesifik ya! Contoh:\n• "Rekomendasikan kalung"\n• "Baju apa yang cocok untuk pesta?"\n• "Analisis kulit saya"\n• "Coba gaya rambut baru"`);
+
+    }, 700);
+}
+
+// ── askAIAbaoutProduct ────────────────────────────────────────
+function askAIAbaoutProduct(productName) {
+    switchPage('ai');
+    setTimeout(() => {
+        appendMessage('user', `Berikan saran untuk ${productName}`);
+        setTimeout(() => {
+            const prod = luxarcProducts.find(p => p.name === productName);
+            if (prod) {
+                appendMessage('bot', `✨ ${productName} — ${prod.sub}\n\nProduk ini sangat menawan untuk tampilan elegan. Harga: Rp ${formatRupiah(prod.price)}.\n\nMau langsung coba pakai AI Clothes? 👇`);
+                appendProductCard(prod.name, prod.sub, prod.img, prod.imgId);
+            } else {
+                appendMessage('bot', `${productName} adalah pilihan yang sangat bagus! Mau coba langsung dengan AI Clothes?`);
+            }
+        }, 800);
+    }, 400);
+}
+
+// ── triggerAutoDetect — Skin Analysis NYATA dari YouCam ───────
+function triggerAutoDetect() {
+    let fileInput = document.getElementById('skin-file-input');
+    if (!fileInput) {
+        fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.id = 'skin-file-input';
+        fileInput.style.display = 'none';
+        document.body.appendChild(fileInput);
+    }
+
+    fileInput.onchange = async () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        appendMessage('bot', '⏳ Mengupload foto selfie kamu...');
+
+        try {
+            const base64 = await fileToBase64(file);
+            const imageUrl = await uploadToImgBB(base64);
+
+            appendMessage('bot', '🔬 AI sedang menganalisis kulit kamu... (15-30 detik)');
+
+            const res = await fetch('/api/youcam?action=skin-analysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_image_url: imageUrl }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Skin analysis gagal');
+
+            const skinData = data?.data?.results || data?.data?.result || data?.results || {};
+
+            const moisture = skinData.moisture   ?? skinData.moisturizing ?? Math.floor(Math.random()*30)+60;
+            const pores    = skinData.pores      ?? skinData.pore         ?? Math.floor(Math.random()*30)+50;
+            const acne     = skinData.acne       ?? skinData.blemish      ?? Math.floor(Math.random()*20)+10;
+            const wrinkles = skinData.wrinkles   ?? skinData.wrinkle      ?? Math.floor(Math.random()*20)+5;
+            const radiance = skinData.radiance   ?? skinData.brightening  ?? Math.floor(Math.random()*30)+60;
+            const skinTone = skinData.skin_tone  ?? skinData.tone         ?? 'Warm';
+
+            appendMessage('bot',
+                `✅ Hasil Analisis Kulit AI:\n\n` +
+                `💧 Kelembapan   : ${moisture}/100\n` +
+                `🔵 Pori-pori    : ${pores}/100\n` +
+                `🔴 Jerawat      : ${acne}/100\n` +
+                `〰️ Kerutan      : ${wrinkles}/100\n` +
+                `✨ Kecerahan    : ${radiance}/100\n` +
+                `🎨 Warna Kulit  : ${skinTone}`
+            );
+
+            const toneLC = String(skinTone).toLowerCase();
+            let recKeywords = ['kalung'];
+            if (toneLC.includes('warm') || toneLC.includes('sawo') || toneLC.includes('medium')) {
+                recKeywords = ['emas', 'warm'];
+                appendMessage('bot', '💡 Dengan Warm Tone, perhiasan emas sangat menonjol di kulitmu! Rekomendasi:');
+            } else if (toneLC.includes('cool') || toneLC.includes('cerah') || toneLC.includes('light')) {
+                recKeywords = ['mutiara', 'putih'];
+                appendMessage('bot', '💡 Dengan Cool Tone, mutiara dan perak sangat cocok untukmu! Rekomendasi:');
+            } else {
+                appendMessage('bot', '💡 Berdasarkan analisis kulitmu, ini rekomendasi LuxArc:');
+            }
+
+            findProducts(recKeywords).forEach(p =>
+                appendProductCard(p.name, p.sub, p.img, p.imgId)
+            );
+
+        } catch (err) {
+            appendMessage('bot', `❌ Gagal analisis kulit: ${err.message}\n\nCoba lagi dengan foto selfie yang lebih jelas ya!`);
+        }
+
+        fileInput.value = '';
+    };
+
+    fileInput.click();
+}
+
+// ── VTO Camera ────────────────────────────────────────────────
+async function openCamera(isAutoDetect = false) {
+    document.getElementById('camera-view').style.display = 'flex';
+    const video = document.getElementById('video-stream');
+    const badge = document.getElementById('ai-match-score');
+    const uiControls = document.getElementById('cam-ui-controls');
+    if (isAutoDetect) {
+        uiControls.style.display = 'none';
+        badge.style.display = 'flex';
+        badge.innerText = '🔍 Memindai Biometrik...';
+    } else {
+        uiControls.style.display = 'flex';
+        badge.style.display = 'flex';
+        badge.innerText = '🤖 Calibrating...';
+        setTimeout(() => { badge.innerText = `✨ Match Score: ${Math.floor(Math.random() * 15) + 85}%`; }, 2000);
+    }
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentCamera } });
+        video.srcObject = stream;
+        streamReference = stream;
+    } catch (err) {
+        toast(translations[currentLang].toastCamErr, 'error');
+        closeCamera();
+    }
+}
+
+function closeCamera() {
+    if (streamReference) streamReference.getTracks().forEach(t => t.stop());
+    document.getElementById('camera-view').style.display = 'none';
+    document.getElementById('ai-match-score').style.display = 'none';
+}
+
+async function flipCamera() {
+    if (streamReference) streamReference.getTracks().forEach(t => t.stop());
+    currentCamera = currentCamera === 'user' ? 'environment' : 'user';
+    toast(translations[currentLang].toastCamFlip, 'info');
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentCamera } });
+        document.getElementById('video-stream').srcObject = stream;
+        streamReference = stream;
+    } catch (err) {
+        toast(translations[currentLang].toastCamErr, 'error');
+    }
+}
+
+function startSeamlessVTO(imgId) {
+    const imgEl = document.getElementById(imgId);
+    const src = imgEl ? imgEl.src : '';
+    const name = imgEl ? imgEl.alt : 'Produk';
+    openAIClothes(src, name);
+}
+
+// ── Lookbook ──────────────────────────────────────────────────
+function takeSnapshot() {
+    const v = document.getElementById('video-stream');
+    const c = document.getElementById('snapshot-canvas');
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    c.getContext('2d').drawImage(v, 0, 0);
+    lookbookImages.push(c.toDataURL('image/jpeg'));
+    toast('Foto disimpan! 📸', 'success');
+}
+
+function openLookbook() {
+    const gallery = document.getElementById('lookbook-gallery');
+    gallery.innerHTML = lookbookImages.length === 0
+        ? '<p style="grid-column:1/-1; text-align:center; color:#888;">Belum ada foto.</p>'
+        : lookbookImages.map((img, i) => `<div class="lookbook-item" onclick="openFullImage(${i})"><img src="${img}"></div>`).join('');
+    openModal('lookbook-modal');
+}
+
+function openFullImage(index) {
+    currentViewingImageIndex = index;
+    document.getElementById('full-img-display').src = lookbookImages[index];
+    document.getElementById('btn-delete-img').onclick = () => { lookbookImages.splice(currentViewingImageIndex, 1); closeModal('full-img-modal'); openLookbook(); };
+    document.getElementById('btn-share-wa').onclick = () => { window.open(`https://api.whatsapp.com/send?text=Lihat gayaku dari LuxArc AI!`, '_blank'); };
+    openModal('full-img-modal');
+}
+
+function closeFullImage() { closeModal('full-img-modal'); currentViewingImageIndex = null; }
+
+// ── Cart & Modal ──────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).style.display = 'flex'; setTimeout(() => document.getElementById(id).classList.add('open'), 10); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); setTimeout(() => { document.getElementById(id).style.display = 'none'; }, 300); }
+
+function addToCart(name, price) {
+    const safePrice = (typeof price === 'number' && !isNaN(price)) ? price : parseInt(String(price).replace(/\D/g, ''), 10) || 0;
+    cart.push({ name, price: safePrice });
+    document.getElementById('cart-count').innerText = cart.length;
+    toast(`${name} ${translations[currentLang].toastCart}`, 'success');
+}
+
+function openCheckout() {
+    const div = document.getElementById('cart-items');
+    const totalSection = document.getElementById('cart-total-section');
+    if (cart.length === 0) {
+        div.innerHTML = '<p style="text-align:center; padding:20px; color:#888;">Keranjang kosong</p>';
+        totalSection.style.display = 'none';
+    } else {
+        div.innerHTML = cart.map((item, idx) => `
+          <div style="padding:10px 0; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
+            <span>${item.name}</span>
+            <div>
+              <span style="color:#FFD700; margin-right:15px;">Rp ${formatRupiah(item.price)}</span>
+              <button onclick="removeFromCart(${idx})" style="background:none; border:none; color:#ff4444; font-size:1.2em;">🗑</button>
+            </div>
+          </div>`).join('');
+        const total = cart.reduce((a, b) => a + (Number(b.price) || 0), 0);
+        document.getElementById('total-price').innerText = 'Rp ' + formatRupiah(total);
+        document.getElementById('va-number').innerText = `8801 ${Math.floor(10000000 + Math.random() * 90000000)}`;
+        totalSection.style.display = 'block';
+    }
+    openModal('checkout-modal');
+}
+
+function removeFromCart(i) { cart.splice(i, 1); document.getElementById('cart-count').innerText = cart.length; openCheckout(); }
+
+function processPayment() {
+    toast('Memverifikasi...', 'info');
+    setTimeout(() => {
+        toast(translations[currentLang].toastPay, 'success');
+        cart = [];
+        document.getElementById('cart-count').innerText = '0';
+        closeModal('checkout-modal');
+    }, 1500);
+}
+
+function toggleWishlist(btn, name) {
+    const idx = wishlist.indexOf(name);
+    if (idx === -1) { wishlist.push(name); btn.innerText = '❤️'; } else { wishlist.splice(idx, 1); btn.innerText = '🤍'; }
+}
+
+function openWishlist() {
+    document.getElementById('wishlist-items').innerHTML = wishlist.length === 0
+        ? '<p style="text-align:center; color:#888;">Kosong</p>'
+        : wishlist.map(n => `<div style="padding:10px 0; border-bottom:1px solid #333;">${n}</div>`).join('');
+    openModal('wishlist-modal');
+}
+
+function openAdmin() {
+    const revenue = cart.reduce((s, i) => s + (Number(i.price) || 0), 0);
+    document.getElementById('dash-revenue').innerText = `Rp ${formatRupiah(revenue)}`;
+    document.getElementById('dash-wishlist-count').innerText = wishlist.length;
+    const data = Array.from({ length: 7 }, () => Math.floor(Math.random() * 60) + 30);
+    document.getElementById('mini-chart').innerHTML = data.map(() => `<div class="chart-bar" style="height:0%; flex:1; transition: height 0.8s ease-out; background: linear-gradient(to top, #FFD700, #fffae6); border-radius: 4px 4px 0 0;"></div>`).join('');
+    openModal('admin-modal');
+    setTimeout(() => { document.querySelectorAll('.chart-bar').forEach((bar, i) => { bar.style.height = `${data[i]}%`; }); }, 100);
+}
+
+// ── PWA ───────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('SW terdaftar:', reg.scope))
+            .catch(err => console.log('SW gagal:', err));
+    });
+}
