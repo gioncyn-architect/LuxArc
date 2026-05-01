@@ -1,5 +1,5 @@
-// api/youcam.js — Vercel Serverless Function v3
-const BASE_URL = 'https://yce-api-01.perfectcorp.com';
+// api/youcam.js — Vercel Serverless Function v4 (FIXED URL)
+const BASE_URL = 'https://yce-api-01.makeupar.com';
 
 export const config = {
   api: {
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
   const { action } = req.query;
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-  // ✅ Parse body manual jika belum terparsing
+  // Parse body manual jika belum terparsing
   let body = req.body;
   if (typeof body === 'string') {
     try { body = JSON.parse(body); } catch { body = {}; }
@@ -53,9 +53,9 @@ export default async function handler(req, res) {
       const { user_image_url, cloth_image_url } = body;
 
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan', body_received: body });
-      if (!cloth_image_url) return res.status(400).json({ error: 'cloth_image_url diperlukan', body_received: body });
+      if (!cloth_image_url) return res.status(400).json({ error: 'cloth_image_url diperlukan' });
 
-      const startRes = await fetch(`${BASE_URL}/s2s/v2.0/task/ai-clothes`, {
+      const startRes = await fetch(`${BASE_URL}/s2s/v2.0/task/template/cloth`, {
         method: 'POST',
         headers: HEADERS,
         body: JSON.stringify({
@@ -70,7 +70,7 @@ export default async function handler(req, res) {
       const taskId = startData?.data?.task_id || startData?.task_id;
       if (!taskId) return res.status(500).json({ error: 'Tidak dapat task_id', detail: startData });
 
-      const result = await pollTask(taskId, '/s2s/v2.0/task/ai-clothes');
+      const result = await pollTask(taskId, '/s2s/v2.0/task/template/cloth');
       return res.status(200).json(result);
     }
 
@@ -80,7 +80,7 @@ export default async function handler(req, res) {
 
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
 
-      const startRes = await fetch(`${BASE_URL}/s2s/v2.0/task/ai-hairstyle-generator`, {
+      const startRes = await fetch(`${BASE_URL}/s2s/v2.0/task/template/hair-style`, {
         method: 'POST',
         headers: HEADERS,
         body: JSON.stringify({
@@ -94,7 +94,7 @@ export default async function handler(req, res) {
       const taskId = startData?.data?.task_id || startData?.task_id;
       if (!taskId) return res.status(500).json({ error: 'Tidak dapat task_id', detail: startData });
 
-      const result = await pollTask(taskId, '/s2s/v2.0/task/ai-hairstyle-generator');
+      const result = await pollTask(taskId, '/s2s/v2.0/task/template/hair-style');
       return res.status(200).json(result);
     }
 
