@@ -735,3 +735,367 @@ if ('serviceWorker' in navigator) {
             .catch(err => console.log('SW gagal:', err));
     });
 }
+// ============================================================
+// LuxArc AI — script-additions.js
+// Tambahkan ke bagian BAWAH script.js yang sudah ada
+// ============================================================
+
+// ── Data Produk Baru (Wig, Skincare, Makeup) ─────────────────
+const wigProducts = [
+    { name: 'Wig Brown Pendek', sub: 'Natural Brown Short', img: 'wig-brown-pendek.jpg', price: 250000 },
+    { name: 'Wig Gaya 12',      sub: 'Stylish Cut',         img: 'wig-gaya-12.jpg',      price: 275000 },
+    { name: 'Wig Ikal Pelangi', sub: 'Rainbow Curly',       img: 'wig-ikal-pelangi.jpg', price: 320000 },
+    { name: 'Wig Pendek Pelangi', sub: 'Rainbow Short',     img: 'wig-pendek-pelangi.jpg', price: 290000 },
+    { name: 'Wig Ikal 201',     sub: 'Curly Series 201',    img: 'wig-ikal-201.jpg',     price: 305000 },
+];
+
+const skincareProducts = [
+    { name: 'Skincare Jerawat', sub: 'Acne Treatment Series', img: 'skincare-jerawat.jpg', price: 189000 },
+    { name: 'Skincare Pemutih', sub: 'Brightening Series',    img: 'skincare-pemutih.jpg', price: 215000 },
+];
+
+const makeupProducts = [
+    { name: 'Lipstik Merah 01', sub: 'Bold Red Lip',      img: 'lipstik-merah-01.jpg', zone: 'lip',  price: 95000  },
+    { name: 'Lipstik Pink 02',  sub: 'Soft Pink Lip',     img: 'lipstik-pink-02.jpg',  zone: 'lip',  price: 95000  },
+    { name: 'Eyeshadow 001',    sub: 'Smokey Eye Palette', img: 'eyeshadow-001.jpg',   zone: 'eye',  price: 145000 },
+];
+
+// ── Tambahkan ke luxarcProducts (extend data utama) ───────────
+luxarcProducts.push(
+    ...wigProducts.map(p => ({ ...p, imgId: 'img-' + p.img.replace('.jpg',''), tags: ['wig','rambut','aksesoris'] })),
+    ...skincareProducts.map(p => ({ ...p, imgId: 'img-' + p.img.replace('.jpg',''), tags: ['skincare','kulit','perawatan'] })),
+    ...makeupProducts.map(p => ({ ...p, imgId: 'img-' + p.img.replace('.jpg',''), tags: ['makeup','kosmetik','kecantikan'] }))
+);
+
+// ── handleQuickReply — routing tombol quick reply ─────────────
+function handleQuickReply(type) {
+    // Sembunyikan tombol quick reply setelah dipilih
+    const quickReplies = document.getElementById('ai-quick-replies');
+    if (quickReplies) quickReplies.style.display = 'none';
+
+    switch (type) {
+        case 'makeup':
+            appendMessage('user', '💄 Rekomendasi Makeup');
+            setTimeout(() => {
+                appendMessage('bot', '💄 Pilih produk makeup yang ingin kamu coba:');
+                showSubmenu('submenu-makeup');
+            }, 400);
+            break;
+
+        case 'wig':
+            appendMessage('user', '💇 Coba Gaya Rambut / Wig');
+            setTimeout(() => {
+                appendMessage('bot', '💇 Pilih gaya rambut/wig yang ingin kamu coba:');
+                showSubmenu('submenu-wig');
+            }, 400);
+            break;
+
+        case 'pakaian':
+            appendMessage('user', '👗 Cari Pakaian & Perhiasan');
+            setTimeout(() => {
+                appendMessage('bot', '👗 Berikut koleksi pakaian & perhiasan LuxArc:');
+                findProducts(['pakaian', 'kalung', 'rok', 'blouse', 'emas', 'mutiara']).forEach(p =>
+                    appendProductCard(p.name, p.sub, p.img, p.imgId)
+                );
+                showBackButton();
+            }, 400);
+            break;
+
+        case 'kulit':
+            appendMessage('user', '🧖 Analisis Kulit Saya');
+            setTimeout(() => {
+                appendMessage('bot', '📸 Baik! Saya akan menganalisis kulitmu. Silakan upload selfie yang jelas ya!');
+                triggerAutoDetect();
+            }, 400);
+            break;
+
+        case 'bebas':
+            appendMessage('user', '💬 Tanya Bebas');
+            setTimeout(() => {
+                appendMessage('bot', 'Silakan ketik pertanyaanmu di kolom chat di bawah! Saya siap membantu 😊');
+                // Fokus ke input chat
+                const chatInput = document.getElementById('chat-input');
+                if (chatInput) chatInput.focus();
+            }, 400);
+            break;
+
+        default:
+            appendMessage('bot', 'Pilihan tidak dikenali. Coba lagi ya!');
+    }
+}
+
+// ── showSubmenu — tampilkan sub-menu ─────────────────────────
+function showSubmenu(id) {
+    // Sembunyikan semua submenu dulu
+    document.querySelectorAll('.ai-submenu').forEach(el => el.style.display = 'none');
+    // Tampilkan yang dipilih
+    const target = document.getElementById(id);
+    if (target) {
+        target.style.display = 'block';
+        // Scroll ke submenu
+        setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+    }
+}
+
+// ── closeSubmenu — kembali ke menu utama ─────────────────────
+function closeSubmenu() {
+    // Sembunyikan semua submenu
+    document.querySelectorAll('.ai-submenu').forEach(el => el.style.display = 'none');
+    // Tampilkan kembali quick replies
+    const quickReplies = document.getElementById('ai-quick-replies');
+    if (quickReplies) quickReplies.style.display = 'flex';
+    appendMessage('bot', 'Kembali ke menu utama. Ada lagi yang bisa saya bantu? 😊');
+}
+
+// ── showBackButton — tombol kembali di chat ───────────────────
+function showBackButton() {
+    const backDiv = document.createElement('div');
+    backDiv.className = 'chat-msg bot';
+    backDiv.style.padding = '0';
+    backDiv.innerHTML = `
+        <button class="btn btn-ghost" style="font-size:0.85em; margin-top:8px;"
+            onclick="resetQuickReply(this.parentElement)">
+            ← Kembali ke Menu
+        </button>`;
+    chatHistory.appendChild(backDiv);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+// ── resetQuickReply — reset ke menu awal ─────────────────────
+function resetQuickReply(el) {
+    if (el) el.remove();
+    const quickReplies = document.getElementById('ai-quick-replies');
+    if (quickReplies) quickReplies.style.display = 'flex';
+    appendMessage('bot', 'Ada lagi yang bisa saya bantu? 😊');
+}
+
+// ── tryWigYoucam — coba wig via AI Hairstyle ─────────────────
+function tryWigYoucam(imgSrc, name) {
+    // Tutup submenu
+    document.querySelectorAll('.ai-submenu').forEach(el => el.style.display = 'none');
+
+    showAIModal(`💇 Coba Wig — ${name}`, `
+        <p style="color:#aaa; margin-bottom:10px;">Upload foto wajahmu, AI akan memakaikan wig <b>${name}</b>!</p>
+        <div style="text-align:center; margin-bottom:15px;">
+            <img src="${imgSrc}" style="width:120px; border-radius:10px; border:2px solid #FFD700;">
+            <p style="color:#FFD700; font-size:0.85em; margin-top:6px;">${name}</p>
+        </div>
+        <label style="display:block; background:#1a1a1a; border:1px dashed #FFD700; border-radius:12px; padding:18px; text-align:center; cursor:pointer; margin-bottom:12px;">
+            📷 Pilih Foto Wajahmu
+            <input type="file" accept="image/*" id="wig-photo-input" style="display:none;"
+                onchange="previewPhoto(this,'wig-photo-img','wig-photo-preview')">
+        </label>
+        <div id="wig-photo-preview" style="display:none; margin-bottom:12px;">
+            <img id="wig-photo-img" style="width:100%; border-radius:12px; max-height:220px; object-fit:cover;">
+        </div>
+        <button class="btn btn-gold shimmer-btn" style="width:100%;" onclick="runWigYoucam('${imgSrc}','${name}')">
+            🤖 Coba Wig Sekarang
+        </button>
+        <div id="wig-result-area" style="margin-top:18px;"></div>
+    `);
+}
+
+async function runWigYoucam(wigImgSrc, name) {
+    const input = document.getElementById('wig-photo-input');
+    if (!input || !input.files[0]) { toast('Upload foto dulu!', 'error'); return; }
+
+    const resultArea = document.getElementById('wig-result-area');
+    resultArea.innerHTML = `<div style="text-align:center; padding:20px; color:#FFD700;">⏳ Mengupload foto...<br><small>Mohon tunggu sebentar</small></div>`;
+
+    try {
+        const userBase64 = await fileToBase64(input.files[0]);
+        const userImageUrl = await uploadToImgBB(userBase64);
+
+        resultArea.innerHTML = `<div style="text-align:center; padding:20px; color:#FFD700;">⏳ AI sedang memakaikan wig...<br><small>Mohon tunggu 15-30 detik</small></div>`;
+
+        // Gunakan endpoint hairstyle YouCam (wig = hairstyle overlay)
+        const res = await fetch('/api/youcam?action=ai-hairstyle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_image_url: userImageUrl, style: 'wig', wig_url: wigImgSrc }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || JSON.stringify(data));
+
+        const outputUrl = getOutputUrl(data);
+        if (outputUrl) {
+            resultArea.innerHTML = `
+                <p style="color:#FFD700; margin-bottom:10px;">✅ Hasil AI Wig — ${name}:</p>
+                <img src="${outputUrl}" style="width:100%; border-radius:12px; margin-bottom:12px;">
+                <div style="display:flex; gap:10px;">
+                    <a href="${outputUrl}" download="luxarc-wig.jpg"
+                        class="btn btn-gold shimmer-btn" style="flex:1; text-align:center; text-decoration:none;">⬇️ Unduh</a>
+                    <button class="btn btn-ghost" style="flex:1;"
+                        onclick="window.open('https://api.whatsapp.com/send?text=Lihat wig baruku dari LuxArc! ${outputUrl}','_blank')">📲 Share</button>
+                </div>`;
+            lookbookImages.push(outputUrl);
+        } else {
+            throw new Error('Hasil tidak ditemukan. Response: ' + JSON.stringify(data));
+        }
+    } catch (err) {
+        resultArea.innerHTML = `<p style="color:#ff4444;">❌ Error: ${err.message}</p>`;
+    }
+}
+
+// ── tryMakeupYoucam — coba makeup (lip/eye) ───────────────────
+function tryMakeupYoucam(imgSrc, zone, name) {
+    document.querySelectorAll('.ai-submenu').forEach(el => el.style.display = 'none');
+
+    const zoneLabel = zone === 'lip' ? '💋 Lipstik' : '👁️ Eyeshadow';
+
+    showAIModal(`${zoneLabel} — ${name}`, `
+        <p style="color:#aaa; margin-bottom:10px;">Upload selfie, AI akan memakaikan <b>${name}</b>!</p>
+        <div style="text-align:center; margin-bottom:15px;">
+            <img src="${imgSrc}" style="width:100px; border-radius:10px; border:2px solid #FFD700;">
+            <p style="color:#FFD700; font-size:0.85em; margin-top:6px;">${name}</p>
+        </div>
+        <label style="display:block; background:#1a1a1a; border:1px dashed #FFD700; border-radius:12px; padding:18px; text-align:center; cursor:pointer; margin-bottom:12px;">
+            📷 Pilih Selfie
+            <input type="file" accept="image/*" id="makeup-photo-input" style="display:none;"
+                onchange="previewPhoto(this,'makeup-photo-img','makeup-photo-preview')">
+        </label>
+        <div id="makeup-photo-preview" style="display:none; margin-bottom:12px;">
+            <img id="makeup-photo-img" style="width:100%; border-radius:12px; max-height:220px; object-fit:cover;">
+        </div>
+        <button class="btn btn-gold shimmer-btn" style="width:100%;" onclick="runMakeupYoucam('${imgSrc}','${zone}','${name}')">
+            💄 Coba Makeup AI
+        </button>
+        <div id="makeup-result-area" style="margin-top:18px;"></div>
+    `);
+}
+
+async function runMakeupYoucam(productImgSrc, zone, name) {
+    const input = document.getElementById('makeup-photo-input');
+    if (!input || !input.files[0]) { toast('Upload selfie dulu!', 'error'); return; }
+
+    const resultArea = document.getElementById('makeup-result-area');
+    resultArea.innerHTML = `<div style="text-align:center; padding:20px; color:#FFD700;">⏳ Mengupload foto...<br><small>Mohon tunggu sebentar</small></div>`;
+
+    try {
+        const userBase64 = await fileToBase64(input.files[0]);
+        const userImageUrl = await uploadToImgBB(userBase64);
+
+        resultArea.innerHTML = `<div style="text-align:center; padding:20px; color:#FFD700;">⏳ AI sedang memakaikan makeup...<br><small>Mohon tunggu 15-30 detik</small></div>`;
+
+        const res = await fetch('/api/youcam?action=ai-makeup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_image_url: userImageUrl,
+                product_image_url: productImgSrc,
+                zone: zone,       // 'lip' atau 'eye'
+                product_name: name,
+            }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || JSON.stringify(data));
+
+        const outputUrl = getOutputUrl(data);
+        if (outputUrl) {
+            resultArea.innerHTML = `
+                <p style="color:#FFD700; margin-bottom:10px;">✅ Hasil AI Makeup — ${name}:</p>
+                <img src="${outputUrl}" style="width:100%; border-radius:12px; margin-bottom:12px;">
+                <div style="display:flex; gap:10px;">
+                    <a href="${outputUrl}" download="luxarc-makeup.jpg"
+                        class="btn btn-gold shimmer-btn" style="flex:1; text-align:center; text-decoration:none;">⬇️ Unduh</a>
+                    <button class="btn btn-ghost" style="flex:1;"
+                        onclick="window.open('https://api.whatsapp.com/send?text=Lihat makeup baruku dari LuxArc! ${outputUrl}','_blank')">📲 Share</button>
+                </div>`;
+            lookbookImages.push(outputUrl);
+        } else {
+            throw new Error('Hasil tidak ditemukan. Response: ' + JSON.stringify(data));
+        }
+    } catch (err) {
+        resultArea.innerHTML = `<p style="color:#ff4444;">❌ Error: ${err.message}</p>`;
+    }
+}
+
+// ── analyzeSkincareYoucam — rekomendasi skincare setelah analisis ──
+function analyzeSkincareYoucam(productId, name) {
+    // Tampilkan detail produk skincare di chat
+    switchPage('ai');
+    setTimeout(() => {
+        appendMessage('user', `Info produk: ${name}`);
+        setTimeout(() => {
+            const prod = skincareProducts.find(p => p.name === name || p.img.includes(productId));
+            if (prod) {
+                appendMessage('bot',
+                    `✨ ${prod.name} — ${prod.sub}\n\n` +
+                    `Harga: Rp ${formatRupiah(prod.price)}\n\n` +
+                    `Produk ini cocok untuk ${prod.sub.includes('Acne') ? 'kulit berjerawat & berminyak' : 'kulit kusam & tidak merata'}.\n\n` +
+                    `Mau analisis kulit dulu untuk rekomendasi yang lebih tepat?`
+                );
+                // Tombol analisis kulit
+                const btnDiv = document.createElement('div');
+                btnDiv.className = 'chat-msg bot';
+                btnDiv.innerHTML = `
+                    <button class="btn btn-gold shimmer-btn" style="width:100%; margin-top:8px;"
+                        onclick="triggerAutoDetect()">
+                        📷 Analisis Kulit Sekarang
+                    </button>`;
+                chatHistory.appendChild(btnDiv);
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            } else {
+                appendMessage('bot', `${name} adalah pilihan perawatan kulit yang bagus! Ketik "analisis kulit" untuk rekomendasi personal.`);
+            }
+        }, 600);
+    }, 300);
+}
+
+// ── Update sendChat — tambah support keyword baru ─────────────
+// Simpan referensi sendChat asli
+const _sendChatOriginal = sendChat;
+
+// Override sendChat dengan keyword tambahan
+function sendChat() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const lower = text.toLowerCase();
+
+    // Keyword baru untuk wig
+    if (lower.includes('wig') || lower.includes('rambut palsu')) {
+        appendMessage('user', text);
+        input.value = '';
+        setTimeout(() => {
+            appendMessage('bot', '💇 Berikut koleksi wig LuxArc:');
+            wigProducts.slice(0, 2).forEach(p =>
+                appendProductCard(p.name, p.sub, p.img, 'img-' + p.img.replace('.jpg',''))
+            );
+        }, 700);
+        return;
+    }
+
+    // Keyword baru untuk makeup
+    if (lower.includes('makeup') || lower.includes('lipstik') || lower.includes('eyeshadow') || lower.includes('kosmetik')) {
+        appendMessage('user', text);
+        input.value = '';
+        setTimeout(() => {
+            appendMessage('bot', '💄 Berikut koleksi makeup LuxArc:');
+            makeupProducts.slice(0, 2).forEach(p =>
+                appendProductCard(p.name, p.sub, p.img, 'img-' + p.img.replace('.jpg',''))
+            );
+        }, 700);
+        return;
+    }
+
+    // Keyword baru untuk skincare
+    if (lower.includes('skincare') || lower.includes('perawatan kulit') || lower.includes('serum') || lower.includes('pemutih')) {
+        appendMessage('user', text);
+        input.value = '';
+        setTimeout(() => {
+            appendMessage('bot', '✨ Berikut produk skincare LuxArc:');
+            skincareProducts.forEach(p =>
+                appendProductCard(p.name, p.sub, p.img, 'img-' + p.img.replace('.jpg',''))
+            );
+        }, 700);
+        return;
+    }
+
+    // Fallback ke fungsi sendChat asli
+    _sendChatOriginal();
+                }
+                
