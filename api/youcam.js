@@ -1,4 +1,4 @@
-// api/youcam.js — Vercel Serverless Function v4 (FINAL - ALL FEATURES)
+// api/youcam.js — Vercel Serverless Function v5 (FIXED AUTH)
 // Fitur: AI Clothes, AI Accessory (Kalung+Topi), AI Makeup, AI Hairstyle, AI Wig, Photo Enhancer, Skin Analysis
 
 const BASE_URL = 'https://yce-api-01.makeupar.com';
@@ -32,9 +32,10 @@ export default async function handler(req, res) {
   }
   if (!body) body = {};
 
+  // ✅ FIXED: Gunakan Authorization Bearer (bukan Api-Key)
   const HEADERS = {
     'Content-Type': 'application/json',
-    'Api-Key': apiKey,
+    'Authorization': `Bearer ${apiKey}`,
   };
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -85,7 +86,6 @@ export default async function handler(req, res) {
         throw new Error('Tugas AI gagal: ' + JSON.stringify(d));
       }
 
-      // Kalau tidak ada status tapi sudah ada URL hasil → sukses
       const url = extractResultUrl(d);
       if (url) return d;
     }
@@ -120,7 +120,6 @@ export default async function handler(req, res) {
 
     const taskId = startData?.data?.task_id || startData?.task_id;
 
-    // Kalau tidak ada task_id, cek apakah API langsung kasih hasil (sync)
     if (!taskId) {
       const directUrl = extractResultUrl(startData);
       if (directUrl) return { success: true, result_url: directUrl, raw: startData };
@@ -211,7 +210,6 @@ export default async function handler(req, res) {
       if (!user_image_url)      return res.status(400).json({ error: 'user_image_url diperlukan' });
       if (!accessory_image_url) return res.status(400).json({ error: 'accessory_image_url diperlukan' });
 
-      // Topi → pakai endpoint cloth dengan garment_category hat
       if (accessory_type === 'hat') {
         const out = await runTask('/s2s/v2.0/task/cloth', {
           src_file_url: user_image_url,
@@ -224,7 +222,6 @@ export default async function handler(req, res) {
         return res.status(200).json({ result_url: out.result_url, ...out.raw });
       }
 
-      // Default: kalung / necklace
       const out = await runTask('/s2s/v2.0/task/accessory', {
         src_file_url: user_image_url,
         source_info: { name: user_image_url },
