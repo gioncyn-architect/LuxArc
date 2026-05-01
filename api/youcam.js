@@ -1,4 +1,4 @@
-// api/youcam.js — Vercel Serverless Function v4 (FIXED URL)
+// api/youcam.js — Vercel Serverless Function v5 (FIXED ENDPOINT)
 const BASE_URL = 'https://yce-api-01.makeupar.com';
 
 export const config = {
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan', body_received: body });
       if (!cloth_image_url) return res.status(400).json({ error: 'cloth_image_url diperlukan' });
 
-      const startRes = await fetch(`${BASE_URL}/s2s/v2.0/task/template/cloth`, {
+      const startRes = await fetch(`${BASE_URL}/s2s/v2.0/task/cloth`, {
         method: 'POST',
         headers: HEADERS,
         body: JSON.stringify({
@@ -70,7 +70,7 @@ export default async function handler(req, res) {
       const taskId = startData?.data?.task_id || startData?.task_id;
       if (!taskId) return res.status(500).json({ error: 'Tidak dapat task_id', detail: startData });
 
-      const result = await pollTask(taskId, '/s2s/v2.0/task/template/cloth');
+      const result = await pollTask(taskId, '/s2s/v2.0/task/cloth');
       return res.status(200).json(result);
     }
 
@@ -80,7 +80,7 @@ export default async function handler(req, res) {
 
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
 
-      const startRes = await fetch(`${BASE_URL}/s2s/v2.0/task/template/hair-style`, {
+      const startRes = await fetch(`${BASE_URL}/s2s/v2.0/task/hair-style`, {
         method: 'POST',
         headers: HEADERS,
         body: JSON.stringify({
@@ -94,7 +94,7 @@ export default async function handler(req, res) {
       const taskId = startData?.data?.task_id || startData?.task_id;
       if (!taskId) return res.status(500).json({ error: 'Tidak dapat task_id', detail: startData });
 
-      const result = await pollTask(taskId, '/s2s/v2.0/task/template/hair-style');
+      const result = await pollTask(taskId, '/s2s/v2.0/task/hair-style');
       return res.status(200).json(result);
     }
 
