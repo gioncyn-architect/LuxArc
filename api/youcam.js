@@ -48,19 +48,8 @@ export default async function handler(req, res) {
       const status = d?.data?.task_status || d?.task_status;
 
       if (status === 'success') return d;
-     if (status === 'error' || status === 'failed') {
-  const errMsg = d?.data?.error_message || d?.data?.error || 'Tugas AI gagal';
-  
-  // Pesan ramah untuk user
-  if (errMsg.includes('too similar to source')) {
-    throw new Error('Foto terlalu mirip dengan produk. Pastikan foto full body dan menghadap depan.');
-  }
-  if (errMsg.includes('Editing failed')) {
-    throw new Error('AI gagal memproses foto. Coba gunakan foto yang lebih jelas dan full body.');
-  }
-  
-  throw new Error(errMsg);
-}
+      if (status === 'error' || status === 'failed') {
+        throw new Error('Tugas AI gagal: ' + JSON.stringify(d));
       }
       // status: 'pending' / 'processing' → lanjut poll
     }
