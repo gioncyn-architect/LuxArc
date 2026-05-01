@@ -2,7 +2,14 @@
 // Menggunakan URL publik langsung (tidak perlu upload file)
 
 const BASE_URL = 'https://yce-api-01.perfectcorp.com';
-
+// Tambahkan ini di baris paling atas
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+  },
+};
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
