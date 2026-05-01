@@ -144,7 +144,39 @@ export default async function handler(req, res) {
       const result = await pollTask(taskId, '/s2s/v2.0/task/photo-enhancer');
       return res.status(200).json(result);
     }
+// ── Tambahkan di youcam.js SEBELUM baris ini: ────────────────
+// return res.status(400).json({ error: 'Action tidak dikenal: ' + action });
+// ─────────────────────────────────────────────────────────────
 
+    // ── AI Makeup (Lipstik & Eyeshadow) ──────────────────────
+    if (action === 'ai-makeup') {
+      const { user_image_url, product_image_url, zone, product_name } = body;
+      if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
+      if (!product_image_url) return res.status(400).json({ error: 'product_image_url diperlukan' });
+
+      // zone: 'lip' atau 'eye'
+      const makeupType = zone === 'eye' ? 'eye-shadow' : 'lip-color';
+
+      const startRes = await fetch(`${BASE_URL}/s2s/v2.0/task/makeup`, {
+        method: 'POST',
+        headers: HEADERS,
+        body: JSON.stringify({
+          src_file_url: user_image_url,
+          ref_file_url: product_image_url,
+          dst_actions: [makeupType],
+        }),
+      });
+
+      const startData = await startRes.json();
+      if (!startRes.ok) return res.status(startRes.status).json(startData);
+
+      const taskId = startData?.data?.task_id || startData?.task_id;
+      if (!taskId) return res.status(500).json({ error: 'Tidak dapat task_id', detail: startData });
+
+      const result = await pollTask(taskId, '/s2s/v2.0/task/makeup');
+      return res.status(200).json(result);
+    }
+    
     return res.status(400).json({ error: 'Action tidak dikenal: ' + action });
 
   } catch (err) {
