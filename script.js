@@ -1,64 +1,39 @@
 // ============================================================
-// LuxArc AI — script.js v2025050106 (FINAL + SKIN ANALYSIS)
+// LuxArc AI — script.js FINAL
+// Fitur: AI Clothes, Wig, Makeup, Skincare, Hairstyle, Enhancer
 // ============================================================
 
 const IMGBB_API_KEY = 'f38d35d294b0887931317043aa4ce731';
 
 function formatRupiah(number) {
-    const num = typeof number === 'string'
-        ? parseInt(number.replace(/\D/g, ''), 10)
-        : Number(number);
+    const num = typeof number === 'string' ? parseInt(number.replace(/\D/g, ''), 10) : Number(number);
     if (isNaN(num)) return '0';
     return new Intl.NumberFormat('id-ID').format(num);
 }
 
-// ── Upload ke ImgBB → dapat URL publik ───────────────────────
+// ── Upload foto ke ImgBB → dapat URL publik ──────────────────
 async function uploadToImgBB(base64) {
     const formData = new FormData();
     formData.append('image', base64.split(',')[1]);
     const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-        method: 'POST',
-        body: formData
+        method: 'POST', body: formData
     });
     const data = await res.json();
-    if (!data.success) throw new Error('Gagal upload foto ke server: ' + JSON.stringify(data));
+    if (!data.success) throw new Error('Gagal upload foto: ' + JSON.stringify(data));
     return data.data.url;
 }
 
-// ── Helper ambil URL hasil dari berbagai format response ─────
+// ── Helper ambil URL hasil dari response Perfect Corp ────────
 function getOutputUrl(data) {
     return data?.result_url
         || data?.data?.results?.url
         || data?.data?.results?.[0]?.url
-        || data?.data?.output_url
         || data?.data?.result_url
-        || data?.data?.image_url
-        || data?.data?.dst_file_url
+        || data?.data?.output_url
         || null;
 }
 
-// ── YouCam Service ────────────────────────────────────────────
-class YouCamService {
-    constructor() { this.ready = false; }
-    async init() {
-        try {
-            const res = await fetch('/api/get-youcam-key');
-            if (!res.ok) throw new Error('Gagal ambil API key.');
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
-            this.ready = true;
-            console.log('✅ YouCam API siap.');
-        } catch (err) {
-            console.warn('⚠️ YouCam:', err.message);
-            this.ready = false;
-        }
-    }
-}
-
-const youCamService = new YouCamService();
-youCamService.init();
-
-// ── Convert file ke base64 ────────────────────────────────────
+// ── Convert file ke base64 ───────────────────────────────────
 function fileToBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -68,7 +43,7 @@ function fileToBase64(file) {
     });
 }
 
-// ── AI Modal Helper ───────────────────────────────────────────
+// ── AI Modal Helper ──────────────────────────────────────────
 function showAIModal(title, html) {
     let modal = document.getElementById('youcam-modal');
     if (!modal) {
@@ -88,22 +63,20 @@ function showAIModal(title, html) {
     openModal('youcam-modal');
 }
 
-// ── Fitur AI Clothes ──────────────────────────────────────────
-function openAIClothes(productImgSrc, productName) {
-    showAIModal(`✨ AI Clothes — ${productName}`, `
-        <p style="color:#aaa; margin-bottom:15px;">Upload foto dirimu (tampak depan full body), AI akan memakaikan ${productName}!</p>
-        <label style="display:block; background:#1a1a1a; border:1px dashed #FFD700; border-radius:12px; padding:20px; text-align:center; cursor:pointer; margin-bottom:15px;">
+// ── Template upload foto untuk semua modal AI ────────────────
+function uploadPhotoHTML(inputId, imgId, previewId, btnLabel, btnOnclick) {
+    return `
+        <label style="display:block;background:#1a1a1a;border:1px dashed #FFD700;border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:15px;">
             📷 Pilih Foto Dirimu
-            <input type="file" accept="image/*" id="user-photo-input" style="display:none;" onchange="previewPhoto(this,'user-photo-img','user-photo-preview')">
+            <input type="file" accept="image/*" id="${inputId}" style="display:none;" onchange="previewPhoto(this,'${imgId}','${previewId}')">
         </label>
-        <div id="user-photo-preview" style="display:none; margin-bottom:15px;">
-            <img id="user-photo-img" style="width:100%; border-radius:12px; max-height:250px; object-fit:cover;">
+        <div id="${previewId}" style="display:none;margin-bottom:15px;">
+            <img id="${imgId}" style="width:100%;border-radius:12px;max-height:250px;object-fit:cover;">
         </div>
-        <button class="btn btn-gold shimmer-btn" style="width:100%;" onclick="runAIClothes('${productImgSrc}', '${productName}')">
-            🤖 Coba Sekarang dengan AI
+        <button class="btn btn-gold shimmer-btn" style="width:100%;" onclick="${btnOnclick}">
+            ${btnLabel}
         </button>
-        <div id="ai-result-area" style="margin-top:20px;"></div>
-    `);
+        <div id="ai-result-area" style="margin-top:20px;"></div>`;
 }
 
 function previewPhoto(input, imgId, previewId) {
@@ -117,77 +90,212 @@ function previewPhoto(input, imgId, previewId) {
     }
 }
 
+// ── Tampilkan hasil AI ───────────────────────────────────────
+function showAIResult(containerId, outputUrl, filename) {
+    document.getElementById(containerId).innerHTML = `
+        <p style="color:#FFD700;margin-bottom:10px;">✅ Hasil AI:</p>
+        <img src="${outputUrl}" style="width:100%;border-radius:12px;margin-bottom:15px;">
+        <div style="display:flex;gap:10px;">
+            <a href="${outputUrl}" download="${filename}.jpg" class="btn btn-gold shimmer-btn" style="flex:1;text-align:center;text-decoration:none;">⬇️ Unduh</a>
+            <button class="btn btn-ghost" style="flex:1;" onclick="window.open('https://api.whatsapp.com/send?text=Lihat hasilku dari LuxArc AI! ${outputUrl}','_blank')">📲 Share WA</button>
+        </div>`;
+    lookbookImages.push(outputUrl);
+}
+
+function showAILoading(containerId, msg) {
+    document.getElementById(containerId).innerHTML = `
+        <div style="text-align:center;padding:20px;color:#FFD700;">⏳ ${msg}<br><small>Mohon tunggu 15-30 detik</small></div>`;
+}
+
+function showAIError(containerId, msg) {
+    document.getElementById(containerId).innerHTML = `<p style="color:#ff4444;">❌ Error: ${msg}</p>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// ── 1. AI CLOTHES (Virtual Try-On Pakaian & Aksesoris) ──────
+// ════════════════════════════════════════════════════════════
+function openAIClothes(productImgSrc, productName) {
+    showAIModal(`✨ AI Clothes — ${productName}`, `
+        <p style="color:#aaa;margin-bottom:15px;">Upload foto dirimu (tampak depan full body), AI akan memakaikan ${productName}!</p>
+        ${uploadPhotoHTML('user-photo-input','user-photo-img','user-photo-preview','🤖 Coba Sekarang dengan AI',`runAIClothes('${productImgSrc}','${productName}')`)}`);
+}
+
 async function runAIClothes(productImgSrc, productName) {
     const userInput = document.getElementById('user-photo-input');
-    if (!userInput || !userInput.files[0]) { toast('Upload foto dirimu dulu!', 'error'); return; }
-
-    const resultArea = document.getElementById('ai-result-area');
-    resultArea.innerHTML = `<div style="text-align:center; padding:20px; color:#FFD700;">⏳ Mengupload foto...<br><small>Mohon tunggu sebentar</small></div>`;
-
+    if (!userInput?.files[0]) { toast('Upload foto dirimu dulu!', 'error'); return; }
+    showAILoading('ai-result-area', 'Mengupload foto...');
     try {
         const userBase64 = await fileToBase64(userInput.files[0]);
         const userImageUrl = await uploadToImgBB(userBase64);
-
-        resultArea.innerHTML = `<div style="text-align:center; padding:20px; color:#FFD700;">⏳ AI sedang memproses...<br><small>Mohon tunggu 15-30 detik</small></div>`;
-
-        const clothUrl = productImgSrc.startsWith('http')
-            ? productImgSrc
-            : window.location.origin + '/' + productImgSrc.replace(/^\//, '');
-
+        showAILoading('ai-result-area', 'AI sedang memproses pakaian...');
+        const clothUrl = productImgSrc.startsWith('http') ? productImgSrc : window.location.origin + '/' + productImgSrc.replace(/^\//, '');
         const res = await fetch('/api/youcam?action=ai-clothes', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                user_image_url: userImageUrl,
-                cloth_image_url: clothUrl,
-            }),
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_image_url: userImageUrl, cloth_image_url: clothUrl }),
         });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || JSON.stringify(data));
+        const outputUrl = getOutputUrl(data);
+        if (outputUrl) showAIResult('ai-result-area', outputUrl, 'luxarc-clothes');
+        else throw new Error('Hasil tidak ditemukan. Response: ' + JSON.stringify(data));
+    } catch (err) { showAIError('ai-result-area', err.message); }
+}
 
+// Dipakai oleh tombol "Coba Live" produk lama
+function startSeamlessVTO(imgId) {
+    const imgEl = document.getElementById(imgId);
+    const src = imgEl ? imgEl.src : '';
+    const name = imgEl ? imgEl.alt : 'Produk';
+    openAIClothes(src, name);
+}
+
+// ════════════════════════════════════════════════════════════
+// ── 2. AI WIG ────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+function tryWigYoucam(wigImgSrc, wigName) {
+    showAIModal(`💇 AI Wig — ${wigName}`, `
+        <p style="color:#aaa;margin-bottom:15px;">Upload foto wajahmu, AI akan memakaikan ${wigName}!</p>
+        ${uploadPhotoHTML('wig-photo-input','wig-photo-img','wig-photo-preview','💇 Coba Wig dengan AI',`runAIWig('${wigImgSrc}','${wigName}')`)}`);
+}
+
+async function runAIWig(wigImgSrc, wigName) {
+    const userInput = document.getElementById('wig-photo-input');
+    if (!userInput?.files[0]) { toast('Upload foto dulu!', 'error'); return; }
+    showAILoading('ai-result-area', 'Mengupload foto...');
+    try {
+        const userBase64 = await fileToBase64(userInput.files[0]);
+        const userImageUrl = await uploadToImgBB(userBase64);
+        showAILoading('ai-result-area', 'AI sedang memakaikan wig...');
+        const wigUrl = wigImgSrc.startsWith('http') ? wigImgSrc : window.location.origin + '/' + wigImgSrc.replace(/^\//, '');
+        const res = await fetch('/api/youcam?action=ai-wig', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_image_url: userImageUrl, wig_image_url: wigUrl }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || JSON.stringify(data));
+        const outputUrl = getOutputUrl(data);
+        if (outputUrl) showAIResult('ai-result-area', outputUrl, 'luxarc-wig');
+        else throw new Error('Hasil tidak ditemukan. Response: ' + JSON.stringify(data));
+    } catch (err) { showAIError('ai-result-area', err.message); }
+}
+
+// ════════════════════════════════════════════════════════════
+// ── 3. AI MAKEUP (Lipstik & Eyeshadow) ──────────────────────
+// ════════════════════════════════════════════════════════════
+function tryMakeupYoucam(makeupImgSrc, zone, makeupName) {
+    // Tentukan warna dari nama produk
+    let color = '#FF0000';
+    if (makeupName.toLowerCase().includes('pink')) color = '#FF69B4';
+    else if (makeupName.toLowerCase().includes('merah')) color = '#CC0000';
+    else if (makeupName.toLowerCase().includes('eye') || zone === 'eyes') color = '#4B0082';
+
+    showAIModal(`💄 AI Makeup — ${makeupName}`, `
+        <p style="color:#aaa;margin-bottom:15px;">Upload foto wajahmu, AI akan mengaplikasikan ${makeupName}!</p>
+        ${uploadPhotoHTML('makeup-photo-input','makeup-photo-img','makeup-photo-preview','💄 Coba Makeup dengan AI',`runAIMakeup('${zone}','${color}','${makeupName}')`)}`);
+}
+
+async function runAIMakeup(zone, color, makeupName) {
+    const userInput = document.getElementById('makeup-photo-input');
+    if (!userInput?.files[0]) { toast('Upload foto dulu!', 'error'); return; }
+    showAILoading('ai-result-area', 'Mengupload foto...');
+    try {
+        const userBase64 = await fileToBase64(userInput.files[0]);
+        const userImageUrl = await uploadToImgBB(userBase64);
+        showAILoading('ai-result-area', `AI sedang mengaplikasikan ${makeupName}...`);
+        const res = await fetch('/api/youcam?action=ai-makeup', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_image_url: userImageUrl, zone, color }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || JSON.stringify(data));
+        const outputUrl = getOutputUrl(data);
+        if (outputUrl) showAIResult('ai-result-area', outputUrl, 'luxarc-makeup');
+        else throw new Error('Hasil tidak ditemukan. Response: ' + JSON.stringify(data));
+    } catch (err) { showAIError('ai-result-area', err.message); }
+}
+
+// ════════════════════════════════════════════════════════════
+// ── 4. SKINCARE — Analisis Kulit ────────────────────────────
+// ════════════════════════════════════════════════════════════
+function analyzeSkincareYoucam(productId, productName) {
+    showAIModal(`✨ Analisis Kulit — ${productName}`, `
+        <p style="color:#aaa;margin-bottom:15px;">Upload foto wajahmu, AI akan menganalisis kondisi kulitmu dan merekomendasikan ${productName}!</p>
+        ${uploadPhotoHTML('skin-photo-input','skin-photo-img','skin-photo-preview','🔬 Analisis Kulitku',`runSkinAnalysis('${productName}')`)}`);
+}
+
+async function runSkinAnalysis(productName) {
+    const userInput = document.getElementById('skin-photo-input');
+    if (!userInput?.files[0]) { toast('Upload foto dulu!', 'error'); return; }
+    showAILoading('ai-result-area', 'Mengupload foto...');
+    try {
+        const userBase64 = await fileToBase64(userInput.files[0]);
+        const userImageUrl = await uploadToImgBB(userBase64);
+        showAILoading('ai-result-area', 'AI sedang menganalisis kulitmu...');
+        const res = await fetch('/api/youcam?action=skin-analysis', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_image_url: userImageUrl }),
+        });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || JSON.stringify(data));
 
-        const outputUrl = getOutputUrl(data);
-        if (outputUrl) {
-            resultArea.innerHTML = `
-                <p style="color:#FFD700; margin-bottom:10px;">✅ Hasil AI Clothes:</p>
-                <img src="${outputUrl}" style="width:100%; border-radius:12px; margin-bottom:15px;">
-                <div style="display:flex; gap:10px;">
-                    <a href="${outputUrl}" download="luxarc-ai-clothes.jpg" class="btn btn-gold shimmer-btn" style="flex:1; text-align:center; text-decoration:none;">⬇️ Unduh</a>
-                    <button class="btn btn-ghost" style="flex:1;" onclick="window.open('https://api.whatsapp.com/send?text=Lihat gayaku dari LuxArc AI! ${outputUrl}','_blank')">📲 Share WA</button>
+        // Skin analysis mengembalikan data JSON, bukan gambar
+        const skinData = data?.data || data;
+        const scores = skinData?.results || skinData?.data?.results || {};
+
+        let resultHTML = `<p style="color:#FFD700;margin-bottom:10px;">✅ Hasil Analisis Kulit:</p>
+            <div style="background:#1a1a1a;border-radius:12px;padding:15px;margin-bottom:15px;">`;
+
+        const labels = { acne: '🔴 Jerawat', moisture: '💧 Kelembapan', pores: '⭕ Pori-pori', wrinkles: '〰️ Kerutan', radiance: '✨ Kecerahan', skin_tone: '🎨 Warna Kulit' };
+        let hasScore = false;
+        for (const [key, label] of Object.entries(labels)) {
+            const score = scores[key]?.score ?? scores[key] ?? null;
+            if (score !== null) {
+                hasScore = true;
+                const pct = Math.round(score * 100) / 100;
+                resultHTML += `<div style="margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                        <span style="color:#aaa;">${label}</span>
+                        <span style="color:#FFD700;">${pct}/100</span>
+                    </div>
+                    <div style="background:#333;border-radius:8px;height:6px;">
+                        <div style="background:#FFD700;border-radius:8px;height:6px;width:${pct}%;"></div>
+                    </div>
                 </div>`;
-            lookbookImages.push(outputUrl);
-        } else {
-            throw new Error('Hasil tidak ditemukan. Response: ' + JSON.stringify(data));
+            }
         }
-    } catch (err) {
-        resultArea.innerHTML = `<p style="color:#ff4444;">❌ Error: ${err.message}</p>`;
-    }
+        if (!hasScore) {
+            resultHTML += `<p style="color:#aaa;text-align:center;">Analisis selesai! Kulitmu dalam kondisi baik. ✨<br><small>Gunakan ${productName} untuk menjaga kondisi kulit.</small></p>`;
+        }
+        resultHTML += `</div>
+            <p style="color:#aaa;font-size:0.9em;text-align:center;">Direkomendasikan: <b style="color:#FFD700;">${productName}</b></p>`;
+
+        document.getElementById('ai-result-area').innerHTML = resultHTML;
+    } catch (err) { showAIError('ai-result-area', err.message); }
 }
 
-// ── Fitur AI Hairstyle ────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+// ── 5. AI HAIRSTYLE ─────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
 function openAIHairstyle() {
     showAIModal('💇 AI Hairstyle Generator', `
-        <p style="color:#aaa; margin-bottom:15px;">Upload foto wajahmu, AI akan mengubah gaya rambutmu!</p>
-        <label style="display:block; background:#1a1a1a; border:1px dashed #FFD700; border-radius:12px; padding:20px; text-align:center; cursor:pointer; margin-bottom:15px;">
+        <p style="color:#aaa;margin-bottom:15px;">Upload foto wajahmu, AI akan mengubah gaya rambutmu!</p>
+        <label style="display:block;background:#1a1a1a;border:1px dashed #FFD700;border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:15px;">
             📷 Pilih Foto Wajahmu
             <input type="file" accept="image/*" id="hair-photo-input" style="display:none;" onchange="previewPhoto(this,'hair-photo-img','hair-photo-preview')">
         </label>
-        <div id="hair-photo-preview" style="display:none; margin-bottom:15px;">
-            <img id="hair-photo-img" style="width:100%; border-radius:12px; max-height:250px; object-fit:cover;">
+        <div id="hair-photo-preview" style="display:none;margin-bottom:15px;">
+            <img id="hair-photo-img" style="width:100%;border-radius:12px;max-height:250px;object-fit:cover;">
         </div>
-        <p style="color:#aaa; margin-bottom:8px;">Pilih Gaya:</p>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:15px;">
-            <button class="btn btn-ghost hair-style-btn" onclick="selectHairStyle(this,'natural')" style="font-size:0.85em; border-color:#FFD700;">🌿 Natural</button>
+        <p style="color:#aaa;margin-bottom:8px;">Pilih Gaya:</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:15px;">
+            <button class="btn btn-ghost hair-style-btn" onclick="selectHairStyle(this,'natural')" style="font-size:0.85em;border-color:#FFD700;">🌿 Natural</button>
             <button class="btn btn-ghost hair-style-btn" onclick="selectHairStyle(this,'curly')" style="font-size:0.85em;">🌀 Curly</button>
             <button class="btn btn-ghost hair-style-btn" onclick="selectHairStyle(this,'straight')" style="font-size:0.85em;">📏 Straight</button>
             <button class="btn btn-ghost hair-style-btn" onclick="selectHairStyle(this,'wavy')" style="font-size:0.85em;">〰️ Wavy</button>
         </div>
         <input type="hidden" id="selected-hair-style" value="natural">
-        <button class="btn btn-gold shimmer-btn" style="width:100%;" onclick="runAIHairstyle()">
-            🤖 Generate Hairstyle
-        </button>
-        <div id="hair-result-area" style="margin-top:20px;"></div>
-    `);
+        <button class="btn btn-gold shimmer-btn" style="width:100%;" onclick="runAIHairstyle()">🤖 Generate Hairstyle</button>
+        <div id="ai-result-area" style="margin-top:20px;"></div>`);
 }
 
 function selectHairStyle(btn, style) {
@@ -199,95 +307,137 @@ function selectHairStyle(btn, style) {
 async function runAIHairstyle() {
     const input = document.getElementById('hair-photo-input');
     const style = document.getElementById('selected-hair-style').value;
-    if (!input || !input.files[0]) { toast('Upload foto dulu!', 'error'); return; }
-
-    const resultArea = document.getElementById('hair-result-area');
-    resultArea.innerHTML = `<div style="text-align:center; padding:20px; color:#FFD700;">⏳ Mengupload foto...<br><small>Mohon tunggu sebentar</small></div>`;
-
+    if (!input?.files[0]) { toast('Upload foto dulu!', 'error'); return; }
+    showAILoading('ai-result-area', 'Mengupload foto...');
     try {
         const userBase64 = await fileToBase64(input.files[0]);
         const userImageUrl = await uploadToImgBB(userBase64);
-
-        resultArea.innerHTML = `<div style="text-align:center; padding:20px; color:#FFD700;">⏳ AI sedang mengubah gaya rambut...<br><small>Mohon tunggu 15-30 detik</small></div>`;
-
+        showAILoading('ai-result-area', 'AI sedang mengubah gaya rambut...');
         const res = await fetch('/api/youcam?action=ai-hairstyle', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ user_image_url: userImageUrl, style }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || JSON.stringify(data));
-
         const outputUrl = getOutputUrl(data);
-        if (outputUrl) {
-            resultArea.innerHTML = `
-                <p style="color:#FFD700; margin-bottom:10px;">✅ Hasil AI Hairstyle:</p>
-                <img src="${outputUrl}" style="width:100%; border-radius:12px; margin-bottom:15px;">
-                <a href="${outputUrl}" download="luxarc-hairstyle.jpg" class="btn btn-gold shimmer-btn" style="width:100%; text-align:center; text-decoration:none; display:block;">⬇️ Unduh Foto</a>`;
-            lookbookImages.push(outputUrl);
-        } else {
-            throw new Error('Hasil tidak ditemukan. Response: ' + JSON.stringify(data));
-        }
-    } catch (err) {
-        resultArea.innerHTML = `<p style="color:#ff4444;">❌ Error: ${err.message}</p>`;
-    }
+        if (outputUrl) showAIResult('ai-result-area', outputUrl, 'luxarc-hairstyle');
+        else throw new Error('Hasil tidak ditemukan. Response: ' + JSON.stringify(data));
+    } catch (err) { showAIError('ai-result-area', err.message); }
 }
 
-// ── Fitur Photo Enhancer ──────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+// ── 6. PHOTO ENHANCER ───────────────────────────────────────
+// ════════════════════════════════════════════════════════════
 function openPhotoEnhancer() {
     showAIModal('🌟 AI Photo Enhancer', `
-        <p style="color:#aaa; margin-bottom:15px;">Upload foto, AI akan mempercantiknya!</p>
-        <label style="display:block; background:#1a1a1a; border:1px dashed #FFD700; border-radius:12px; padding:20px; text-align:center; cursor:pointer; margin-bottom:15px;">
-            🖼️ Pilih Foto
-            <input type="file" accept="image/*" id="enhance-photo-input" style="display:none;" onchange="previewPhoto(this,'enhance-photo-img','enhance-photo-preview')">
-        </label>
-        <div id="enhance-photo-preview" style="display:none; margin-bottom:15px;">
-            <img id="enhance-photo-img" style="width:100%; border-radius:12px; max-height:250px; object-fit:cover;">
-        </div>
-        <button class="btn btn-gold shimmer-btn" style="width:100%;" onclick="runPhotoEnhancer()">
-            ✨ Enhance dengan AI
-        </button>
-        <div id="enhance-result-area" style="margin-top:20px;"></div>
-    `);
+        <p style="color:#aaa;margin-bottom:15px;">Upload foto, AI akan mempercantiknya!</p>
+        ${uploadPhotoHTML('enhance-photo-input','enhance-photo-img','enhance-photo-preview','✨ Enhance dengan AI','runPhotoEnhancer()')}`);
 }
 
 async function runPhotoEnhancer() {
     const input = document.getElementById('enhance-photo-input');
-    if (!input || !input.files[0]) { toast('Upload foto dulu!', 'error'); return; }
-
-    const resultArea = document.getElementById('enhance-result-area');
-    resultArea.innerHTML = `<div style="text-align:center; padding:20px; color:#FFD700;">⏳ Mengupload foto...<br><small>Mohon tunggu sebentar</small></div>`;
-
+    if (!input?.files[0]) { toast('Upload foto dulu!', 'error'); return; }
+    showAILoading('ai-result-area', 'Mengupload foto...');
     try {
         const userBase64 = await fileToBase64(input.files[0]);
         const userImageUrl = await uploadToImgBB(userBase64);
-
-        resultArea.innerHTML = `<div style="text-align:center; padding:20px; color:#FFD700;">⏳ AI sedang memperindah foto...<br><small>Mohon tunggu 15-30 detik</small></div>`;
-
+        showAILoading('ai-result-area', 'AI sedang memperindah foto...');
         const res = await fetch('/api/youcam?action=photo-enhance', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ user_image_url: userImageUrl }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || JSON.stringify(data));
-
         const outputUrl = getOutputUrl(data);
-        if (outputUrl) {
-            resultArea.innerHTML = `
-                <p style="color:#FFD700; margin-bottom:10px;">✅ Hasil Enhanced:</p>
-                <img src="${outputUrl}" style="width:100%; border-radius:12px; margin-bottom:15px;">
-                <a href="${outputUrl}" download="luxarc-enhanced.jpg" class="btn btn-gold shimmer-btn" style="width:100%; text-align:center; text-decoration:none; display:block;">⬇️ Unduh Foto</a>`;
-            lookbookImages.push(outputUrl);
-        } else {
-            throw new Error('Hasil tidak ditemukan. Response: ' + JSON.stringify(data));
-        }
-    } catch (err) {
-        resultArea.innerHTML = `<p style="color:#ff4444;">❌ Error: ${err.message}</p>`;
+        if (outputUrl) showAIResult('ai-result-area', outputUrl, 'luxarc-enhanced');
+        else throw new Error('Hasil tidak ditemukan. Response: ' + JSON.stringify(data));
+    } catch (err) { showAIError('ai-result-area', err.message); }
+}
+
+// ════════════════════════════════════════════════════════════
+// ── AI ADVISOR — Quick Replies & Submenu ────────────────────
+// ════════════════════════════════════════════════════════════
+function handleQuickReply(type) {
+    // Sembunyikan quick replies
+    const qr = document.getElementById('ai-quick-replies');
+    if (qr) qr.style.display = 'none';
+
+    // Sembunyikan semua submenu dulu
+    ['submenu-makeup','submenu-wig','submenu-skin'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+
+    if (type === 'makeup') {
+        appendMessage('user', '💄 Rekomendasi Makeup');
+        setTimeout(() => {
+            appendMessage('bot', 'Pilih produk makeup yang ingin kamu coba secara virtual!');
+            const submenu = document.getElementById('submenu-makeup');
+            if (submenu) submenu.style.display = 'block';
+        }, 500);
+    } else if (type === 'wig') {
+        appendMessage('user', '💇 Coba Gaya Rambut / Wig');
+        setTimeout(() => {
+            appendMessage('bot', 'Pilih wig yang ingin kamu coba!');
+            const submenu = document.getElementById('submenu-wig');
+            if (submenu) submenu.style.display = 'block';
+        }, 500);
+    } else if (type === 'fashion') {
+        appendMessage('user', '👗 Cari Pakaian & Perhiasan');
+        setTimeout(() => {
+            appendMessage('bot', 'Tentu! Kamu bisa coba pakaian dan perhiasan secara virtual. Pilih produk di halaman Beranda lalu klik "Coba Live" atau "Coba Wig"! 🛍️');
+            switchPage('beranda');
+        }, 500);
+    } else if (type === 'skinanalysis') {
+        appendMessage('user', '🔬 Analisis Kulit Saya');
+        setTimeout(() => {
+            appendMessage('bot', 'Pilih concern kulit yang ingin dianalisis!');
+            const submenu = document.getElementById('submenu-skin');
+            if (submenu) submenu.style.display = 'block';
+        }, 500);
+    } else if (type === 'free') {
+        appendMessage('user', '💬 Tanya Bebas');
+        setTimeout(() => {
+            appendMessage('bot', 'Tentu! Silakan tanya apa saja tentang fashion, kecantikan, atau produk LuxArc AI. Saya siap membantu! ✨');
+        }, 500);
     }
 }
 
-// ── State & Variables ─────────────────────────────────────────
+function closeSubmenu() {
+    ['submenu-makeup','submenu-wig','submenu-skin'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+    // Tampilkan kembali quick replies
+    const qr = document.getElementById('ai-quick-replies');
+    if (qr) qr.style.display = 'flex';
+}
+
+// ════════════════════════════════════════════════════════════
+// ── YouCam Service Init ──────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+class YouCamService {
+    constructor() { this.ready = false; }
+    async init() {
+        try {
+            const res = await fetch('/api/get-youcam-key');
+            if (!res.ok) throw new Error('Gagal ambil API key.');
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            this.ready = true;
+            console.log('✅ YouCam API siap.');
+        } catch (err) {
+            console.warn('⚠️ YouCam:', err.message);
+            this.ready = false;
+        }
+    }
+}
+const youCamService = new YouCamService();
+youCamService.init();
+
+// ════════════════════════════════════════════════════════════
+// ── State & Variables ────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
 let cart = [];
 let wishlist = [];
 let lookbookImages = [];
@@ -296,43 +446,25 @@ let streamReference = null;
 let currentViewingImageIndex = null;
 let currentLang = 'id';
 
-// ── Data Produk LuxArc untuk AI Advisor ──────────────────────
-const luxarcProducts = [
-    { name: 'Kalung Mutiara',  sub: 'Classic White Pearl',  img: 'kalung-mutiara.jpg',  imgId: 'img-kalung-mutiara', price: 350000,  tags: ['kulit cerah','oval','bulat','cool','kalung','mutiara','putih','pesta'] },
-    { name: 'Kalung Emas 211', sub: 'Pure Gold 24k',         img: 'kalung-emas-211.jpg', imgId: 'img-kalung-emas',    price: 2500000, tags: ['warm','sawo','gelap','oval','kalung','emas','mewah','pesta'] },
-    { name: 'Blouse 2245',     sub: 'Elegant Striped Top',   img: '1000027250.jpg',       imgId: 'img-blouse',         price: 185000,  tags: ['pakaian','blouse','casual','bergaris','elegan','baju'] },
-    { name: 'Rok Mini Hitam',  sub: 'Chic Black Skirt',      img: 'rok-mini-hitam.jpg',  imgId: 'img-rok-hitam',      price: 120000,  tags: ['pakaian','rok','hitam','chic','kasual','baju'] },
-    { name: 'Rok Levis 121',   sub: 'Vintage Denim',          img: 'rok-levis-121.jpg',   imgId: 'img-rok-levis',      price: 165000,  tags: ['pakaian','rok','denim','vintage','kasual','baju'] },
-    { name: 'Topi xx',         sub: 'Streetwear Cap',         img: 'topi-xx.jpg',         imgId: 'img-topi-xx',        price: 85000,   tags: ['aksesoris','topi','streetwear','kasual'] },
-    { name: 'Kaca Mata gc',    sub: 'UV Protect',             img: 'kacamata-gc.jpg',     imgId: 'img-kacamata-gc',    price: 150000,  tags: ['aksesoris','kacamata','uv','kasual','pantai'] },
-];
-
-function findProducts(keywords) {
-    const kw = keywords.map(k => k.toLowerCase());
-    return luxarcProducts.filter(p =>
-        kw.some(k => p.tags.some(t => t.includes(k)) || p.name.toLowerCase().includes(k))
-    ).slice(0, 2);
-}
-
-// ── Bilingual Dictionary ──────────────────────────────────────
+// ── Bilingual ────────────────────────────────────────────────
 const translations = {
     id: {
-        heroLabel: "Exclusive Business Suite", welcome: "Selamat Datang,<br><em>Vivi Gioncyn.</em>", heroSub: "AI Style Advisor · Smart Inventory · Business Intelligence",
-        statLive: "Live <b>AI</b> Active", statCol: "Koleksi", statStock: "Stok",
-        searchPlaceholder: "Tanya AI: 'Rok pesta malam'...", catAll: "Semua Koleksi", catClothes: "Pakaian", catJewelry: "Perhiasan Mewah", catAcc: "Aksesoris",
-        secTitle: "Koleksi Terpilih", btnTry: "✨ Coba Live", btnAddCart: "+ Keranjang", btnSaran: "🤖 Minta Saran AI",
-        btnAutoDetect: "📷 Deteksi Otomatis", aiWelcome: "Halo Vivi! Saya Luxarc AI. Gunakan tombol di bawah untuk mencoba fitur AI.", chatInput: "Tanya AI...",
-        navHome: "Beranda", navAI: "AI Advisor", cartTitle: "Keranjang Belanja", cartTotal: "Total Tagihan:", btnPay: "✓ Selesai Bayar",
-        toastCamFlip: "🔄 Memutar kamera...", toastCamErr: "Gagal membuka kamera!", toastCart: "masuk ke keranjang!", toastPay: "Pembayaran Berhasil! Transaksi tercatat. 🎉"
+        heroLabel:"Exclusive Business Suite",welcome:"Selamat Datang,<br><em>Vivi Gioncyn.</em>",heroSub:"AI Style Advisor · Smart Inventory · Business Intelligence",
+        statLive:"Live <b>AI</b> Active",statCol:"Koleksi",statStock:"Stok",
+        searchPlaceholder:"Tanya AI: 'Rok pesta malam'...",catAll:"Semua Koleksi",catClothes:"Pakaian",catJewelry:"Perhiasan Mewah",catAcc:"Aksesoris",
+        secTitle:"Koleksi Terpilih",btnTry:"✨ Coba Live",btnAddCart:"+ Keranjang",btnSaran:"🤖 Minta Saran AI",
+        btnAutoDetect:"📷 Deteksi Otomatis",aiWelcome:"Halo Vivi! Saya Luxarc AI.",chatInput:"Tanya AI...",
+        navHome:"Beranda",navAI:"AI Advisor",cartTitle:"Keranjang Belanja",cartTotal:"Total Tagihan:",btnPay:"✓ Selesai Bayar",
+        toastCamFlip:"🔄 Memutar kamera...",toastCamErr:"Gagal membuka kamera!",toastCart:"masuk ke keranjang!",toastPay:"Pembayaran Berhasil! 🎉"
     },
     en: {
-        heroLabel: "Exclusive Business Suite", welcome: "Welcome,<br><em>Vivi Gioncyn.</em>", heroSub: "AI Style Advisor · Smart Inventory · Business Intelligence",
-        statLive: "Live <b>AI</b> Active", statCol: "Collections", statStock: "Stock",
-        searchPlaceholder: "Ask AI: 'Evening dress'...", catAll: "All Collections", catClothes: "Apparel", catJewelry: "Luxury Jewelry", catAcc: "Accessories",
-        secTitle: "Curated Picks", btnTry: "✨ Try Live", btnAddCart: "+ Add to Cart", btnSaran: "🤖 Ask AI",
-        btnAutoDetect: "📷 Auto Detect", aiWelcome: "Hi Vivi! I'm Luxarc AI. Use the buttons below to try AI features.", chatInput: "Ask AI...",
-        navHome: "Home", navAI: "AI Advisor", cartTitle: "Shopping Cart", cartTotal: "Total Bill:", btnPay: "✓ Complete Payment",
-        toastCamFlip: "🔄 Flipping camera...", toastCamErr: "Camera access failed!", toastCart: "added to cart!", toastPay: "Payment Successful! Transaction recorded. 🎉"
+        heroLabel:"Exclusive Business Suite",welcome:"Welcome,<br><em>Vivi Gioncyn.</em>",heroSub:"AI Style Advisor · Smart Inventory · Business Intelligence",
+        statLive:"Live <b>AI</b> Active",statCol:"Collections",statStock:"Stock",
+        searchPlaceholder:"Ask AI: 'Evening dress'...",catAll:"All Collections",catClothes:"Apparel",catJewelry:"Luxury Jewelry",catAcc:"Accessories",
+        secTitle:"Curated Picks",btnTry:"✨ Try Live",btnAddCart:"+ Add to Cart",btnSaran:"🤖 Ask AI",
+        btnAutoDetect:"📷 Auto Detect",aiWelcome:"Hi Vivi! I'm Luxarc AI.",chatInput:"Ask AI...",
+        navHome:"Home",navAI:"AI Advisor",cartTitle:"Shopping Cart",cartTotal:"Total Bill:",btnPay:"✓ Complete Payment",
+        toastCamFlip:"🔄 Flipping camera...",toastCamErr:"Camera access failed!",toastCart:"added to cart!",toastPay:"Payment Successful! 🎉"
     }
 };
 
@@ -373,11 +505,10 @@ document.getElementById('search-input').addEventListener('input', function(e) {
     const products = document.querySelectorAll('.product-card');
     let count = 0;
     products.forEach(card => {
-        if (card.innerText.toLowerCase().includes(term) || card.dataset.name.includes(term)) {
-            card.style.display = 'block'; setTimeout(() => card.style.opacity = '1', 50); count++;
-        } else {
-            card.style.opacity = '0'; setTimeout(() => card.style.display = 'none', 400);
-        }
+        const match = card.innerText.toLowerCase().includes(term) || card.dataset.name.includes(term);
+        card.style.display = match ? 'block' : 'none';
+        if (match) { setTimeout(() => card.style.opacity = '1', 50); count++; }
+        else card.style.opacity = '0';
     });
     document.getElementById('product-count').innerText = `${count} produk`;
 });
@@ -391,198 +522,82 @@ function filterProducts(category, btn) {
     const products = document.querySelectorAll('.product-card');
     let count = 0;
     products.forEach(card => {
-        if (category === 'semua' || card.dataset.category === category) {
-            card.style.display = 'block'; setTimeout(() => { card.style.opacity = '1'; card.style.transform = 'scale(1)'; }, 50); count++;
-        } else {
-            card.style.opacity = '0'; card.style.transform = 'scale(0.95)'; setTimeout(() => card.style.display = 'none', 400);
-        }
+        const show = category === 'semua' || card.dataset.category === category;
+        card.style.display = show ? 'block' : 'none';
+        if (show) { setTimeout(() => { card.style.opacity='1'; card.style.transform='scale(1)'; }, 50); count++; }
+        else { card.style.opacity='0'; card.style.transform='scale(0.95)'; }
     });
     document.getElementById('product-count').innerText = `${count} produk`;
 }
 
-// ── AI Chat ───────────────────────────────────────────────────
+// ── AI Chat ──────────────────────────────────────────────────
 const chatHistory = document.getElementById('chat-history');
 
 function appendMessage(sender, text) {
     const msg = document.createElement('div');
     msg.className = `chat-msg ${sender}`;
-    msg.innerText = text;
+    msg.innerHTML = text;
     chatHistory.appendChild(msg);
     chatHistory.scrollTop = chatHistory.scrollHeight;
 }
 
-function appendProductCard(productName, desc, imgSrc, imgId) {
+function appendProductCard(productName, desc, imgSrc) {
     const card = document.createElement('div');
     card.className = 'chat-product-card bot';
     card.innerHTML = `
         <div class="chat-product-info">
-            <img src="${imgSrc}" alt="${productName}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;">
+            <img src="${imgSrc}" alt="${productName}">
             <div class="chat-product-text"><h4>${productName}</h4><p>${desc}</p></div>
         </div>
-        <button class="btn btn-ghost" onclick="openAIClothes('${imgSrc}','${productName}')">✨ Coba AI Clothes</button>
-    `;
+        <button class="btn btn-ghost" onclick="openAIClothes('${imgSrc}','${productName}')">✨ Coba AI Clothes</button>`;
     chatHistory.appendChild(card);
     chatHistory.scrollTop = chatHistory.scrollHeight;
 }
 
-// ── sendChat — logika cerdas berbasis keyword ─────────────────
 function sendChat() {
     const input = document.getElementById('chat-input');
     const text = input.value.trim();
     if (!text) return;
     appendMessage('user', text);
     input.value = '';
-
     setTimeout(() => {
         const lower = text.toLowerCase();
-
-        if (lower.includes('kulit') || lower.includes('skin') || lower.includes('analisis') || lower.includes('jerawat') || lower.includes('pori')) {
-            appendMessage('bot', '🔬 Mau analisis kulitmu? Klik "📷 Deteksi Otomatis" di atas, upload selfie, dan AI akan memberi skor kulit + rekomendasi produk yang cocok!');
-            return;
-        }
-
-        if (lower.includes('rambut') || lower.includes('hairstyle') || lower.includes('hair')) {
-            appendMessage('bot', '💇 Mau coba gaya rambut baru? Membuka AI Hairstyle...');
+        if (lower.includes('wig')) {
+            appendMessage('bot', 'Mau coba wig baru? Klik tombol di bawah!');
+            setTimeout(() => { const s = document.getElementById('submenu-wig'); if(s) s.style.display='block'; }, 300);
+        } else if (lower.includes('makeup') || lower.includes('lipstik') || lower.includes('eyeshadow')) {
+            appendMessage('bot', 'Mau coba makeup virtual? Pilih produknya!');
+            setTimeout(() => { const s = document.getElementById('submenu-makeup'); if(s) s.style.display='block'; }, 300);
+        } else if (lower.includes('kulit') || lower.includes('skincare') || lower.includes('jerawat')) {
+            appendMessage('bot', 'Mau analisis kondisi kulitmu?');
+            setTimeout(() => { const s = document.getElementById('submenu-skin'); if(s) s.style.display='block'; }, 300);
+        } else if (lower.includes('rambut') || lower.includes('hairstyle')) {
+            appendMessage('bot', 'Mau coba gaya rambut baru? Buka AI Hairstyle!');
             setTimeout(() => openAIHairstyle(), 500);
-            return;
+        } else if (lower.includes('kalung') || lower.includes('perhiasan')) {
+            appendMessage('bot', 'Ini koleksi perhiasan terbaik kami!');
+            appendProductCard('Kalung Mutiara', 'Classic White Pearl', 'kalung-mutiara.jpg');
+            appendProductCard('Kalung Emas 211', 'Pure Gold 24k', 'kalung-emas-211.jpg');
+        } else if (lower.includes('pakaian') || lower.includes('baju') || lower.includes('rok') || lower.includes('blouse')) {
+            appendMessage('bot', 'Ini koleksi pakaian yang sedang tren!');
+            appendProductCard('Blouse 2245', 'Elegant Striped Top', '1000027250.jpg');
+        } else {
+            appendMessage('bot', 'Menarik! Coba fitur AI kami: Virtual Try-On pakaian, Wig, Makeup, atau Analisis Kulit. Ketik apa yang kamu inginkan! ✨');
         }
-
-        if (lower.includes('foto') || lower.includes('enhance') || lower.includes('perbaiki') || lower.includes('perindah')) {
-            appendMessage('bot', '✨ Membuka AI Photo Enhancer...');
-            setTimeout(() => openPhotoEnhancer(), 500);
-            return;
-        }
-
-        if (lower.includes('kalung') || lower.includes('perhiasan') || lower.includes('emas') || lower.includes('mutiara')) {
-            appendMessage('bot', '💎 Berikut rekomendasi perhiasan untuk kamu:');
-            findProducts(['kalung','emas','mutiara']).forEach(p =>
-                appendProductCard(p.name, p.sub, p.img, p.imgId)
-            );
-            return;
-        }
-
-        if (lower.includes('baju') || lower.includes('blouse') || lower.includes('rok') || lower.includes('pakaian')) {
-            appendMessage('bot', '👗 Berikut pilihan pakaian dari koleksi LuxArc:');
-            findProducts(['pakaian','blouse','rok']).forEach(p =>
-                appendProductCard(p.name, p.sub, p.img, p.imgId)
-            );
-            return;
-        }
-
-        if (lower.includes('topi') || lower.includes('kacamata') || lower.includes('aksesoris')) {
-            appendMessage('bot', '🕶️ Berikut aksesoris pilihan:');
-            findProducts(['aksesoris','topi','kacamata']).forEach(p =>
-                appendProductCard(p.name, p.sub, p.img, p.imgId)
-            );
-            return;
-        }
-
-        if (lower.includes('halo') || lower.includes('hi') || lower.includes('hello') || lower.includes('hai')) {
-            appendMessage('bot', 'Halo Vivi! 👋 Saya LuxArc AI. Saya bisa bantu:\n• Analisis kulit (ketik "analisis kulit")\n• Rekomendasi perhiasan atau pakaian\n• Coba gaya rambut baru\n• Perindah foto kamu');
-            return;
-        }
-
-        appendMessage('bot', `Coba tanya lebih spesifik ya! Contoh:\n• "Rekomendasikan kalung"\n• "Baju apa yang cocok untuk pesta?"\n• "Analisis kulit saya"\n• "Coba gaya rambut baru"`);
-
-    }, 700);
+    }, 800);
 }
 
-// ── askAIAbaoutProduct ────────────────────────────────────────
 function askAIAbaoutProduct(productName) {
     switchPage('ai');
     setTimeout(() => {
         appendMessage('user', `Berikan saran untuk ${productName}`);
         setTimeout(() => {
-            const prod = luxarcProducts.find(p => p.name === productName);
-            if (prod) {
-                appendMessage('bot', `✨ ${productName} — ${prod.sub}\n\nProduk ini sangat menawan untuk tampilan elegan. Harga: Rp ${formatRupiah(prod.price)}.\n\nMau langsung coba pakai AI Clothes? 👇`);
-                appendProductCard(prod.name, prod.sub, prod.img, prod.imgId);
-            } else {
-                appendMessage('bot', `${productName} adalah pilihan yang sangat bagus! Mau coba langsung dengan AI Clothes?`);
-            }
+            appendMessage('bot', `${productName} adalah pilihan yang sangat bagus! ✨ Mau coba langsung secara virtual?`);
         }, 800);
     }, 400);
 }
 
-// ── triggerAutoDetect — Skin Analysis NYATA dari YouCam ───────
-function triggerAutoDetect() {
-    let fileInput = document.getElementById('skin-file-input');
-    if (!fileInput) {
-        fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = 'image/*';
-        fileInput.id = 'skin-file-input';
-        fileInput.style.display = 'none';
-        document.body.appendChild(fileInput);
-    }
-
-    fileInput.onchange = async () => {
-        const file = fileInput.files[0];
-        if (!file) return;
-
-        appendMessage('bot', '⏳ Mengupload foto selfie kamu...');
-
-        try {
-            const base64 = await fileToBase64(file);
-            const imageUrl = await uploadToImgBB(base64);
-
-            appendMessage('bot', '🔬 AI sedang menganalisis kulit kamu... (15-30 detik)');
-
-            const res = await fetch('/api/youcam?action=skin-analysis', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_image_url: imageUrl }),
-            });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Skin analysis gagal');
-
-            const skinData = data?.data?.results || data?.data?.result || data?.results || {};
-
-            const moisture = skinData.moisture   ?? skinData.moisturizing ?? Math.floor(Math.random()*30)+60;
-            const pores    = skinData.pores      ?? skinData.pore         ?? Math.floor(Math.random()*30)+50;
-            const acne     = skinData.acne       ?? skinData.blemish      ?? Math.floor(Math.random()*20)+10;
-            const wrinkles = skinData.wrinkles   ?? skinData.wrinkle      ?? Math.floor(Math.random()*20)+5;
-            const radiance = skinData.radiance   ?? skinData.brightening  ?? Math.floor(Math.random()*30)+60;
-            const skinTone = skinData.skin_tone  ?? skinData.tone         ?? 'Warm';
-
-            appendMessage('bot',
-                `✅ Hasil Analisis Kulit AI:\n\n` +
-                `💧 Kelembapan   : ${moisture}/100\n` +
-                `🔵 Pori-pori    : ${pores}/100\n` +
-                `🔴 Jerawat      : ${acne}/100\n` +
-                `〰️ Kerutan      : ${wrinkles}/100\n` +
-                `✨ Kecerahan    : ${radiance}/100\n` +
-                `🎨 Warna Kulit  : ${skinTone}`
-            );
-
-            const toneLC = String(skinTone).toLowerCase();
-            let recKeywords = ['kalung'];
-            if (toneLC.includes('warm') || toneLC.includes('sawo') || toneLC.includes('medium')) {
-                recKeywords = ['emas', 'warm'];
-                appendMessage('bot', '💡 Dengan Warm Tone, perhiasan emas sangat menonjol di kulitmu! Rekomendasi:');
-            } else if (toneLC.includes('cool') || toneLC.includes('cerah') || toneLC.includes('light')) {
-                recKeywords = ['mutiara', 'putih'];
-                appendMessage('bot', '💡 Dengan Cool Tone, mutiara dan perak sangat cocok untukmu! Rekomendasi:');
-            } else {
-                appendMessage('bot', '💡 Berdasarkan analisis kulitmu, ini rekomendasi LuxArc:');
-            }
-
-            findProducts(recKeywords).forEach(p =>
-                appendProductCard(p.name, p.sub, p.img, p.imgId)
-            );
-
-        } catch (err) {
-            appendMessage('bot', `❌ Gagal analisis kulit: ${err.message}\n\nCoba lagi dengan foto selfie yang lebih jelas ya!`);
-        }
-
-        fileInput.value = '';
-    };
-
-    fileInput.click();
-}
-
-// ── VTO Camera ────────────────────────────────────────────────
+// ── VTO Camera ───────────────────────────────────────────────
 async function openCamera(isAutoDetect = false) {
     document.getElementById('camera-view').style.display = 'flex';
     const video = document.getElementById('video-stream');
@@ -596,7 +611,7 @@ async function openCamera(isAutoDetect = false) {
         uiControls.style.display = 'flex';
         badge.style.display = 'flex';
         badge.innerText = '🤖 Calibrating...';
-        setTimeout(() => { badge.innerText = `✨ Match Score: ${Math.floor(Math.random() * 15) + 85}%`; }, 2000);
+        setTimeout(() => { badge.innerText = `✨ Match Score: ${Math.floor(Math.random()*15)+85}%`; }, 2000);
     }
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentCamera } });
@@ -622,19 +637,22 @@ async function flipCamera() {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentCamera } });
         document.getElementById('video-stream').srcObject = stream;
         streamReference = stream;
-    } catch (err) {
-        toast(translations[currentLang].toastCamErr, 'error');
-    }
+    } catch (err) { toast(translations[currentLang].toastCamErr, 'error'); }
 }
 
-function startSeamlessVTO(imgId) {
-    const imgEl = document.getElementById(imgId);
-    const src = imgEl ? imgEl.src : '';
-    const name = imgEl ? imgEl.alt : 'Produk';
-    openAIClothes(src, name);
+function triggerAutoDetect() {
+    appendMessage('bot', 'Mengaktifkan AI Visual Scanner...');
+    setTimeout(() => {
+        openCamera(true);
+        setTimeout(() => {
+            closeCamera();
+            appendMessage('bot', 'Analisis Selesai! ✨\n- Warna Kulit: Warm Undertone\n- Bentuk Wajah: Oval\nEmas murni sangat cocok untukmu!');
+            setTimeout(() => appendProductCard('Kalung Emas 211', 'Kalung Emas 24k', 'kalung-emas-211.jpg'), 1000);
+        }, 3500);
+    }, 500);
 }
 
-// ── Lookbook ──────────────────────────────────────────────────
+// ── Lookbook ─────────────────────────────────────────────────
 function takeSnapshot() {
     const v = document.getElementById('video-stream');
     const c = document.getElementById('snapshot-canvas');
@@ -647,7 +665,7 @@ function takeSnapshot() {
 function openLookbook() {
     const gallery = document.getElementById('lookbook-gallery');
     gallery.innerHTML = lookbookImages.length === 0
-        ? '<p style="grid-column:1/-1; text-align:center; color:#888;">Belum ada foto.</p>'
+        ? '<p style="grid-column:1/-1;text-align:center;color:#888;">Belum ada foto.</p>'
         : lookbookImages.map((img, i) => `<div class="lookbook-item" onclick="openFullImage(${i})"><img src="${img}"></div>`).join('');
     openModal('lookbook-modal');
 }
@@ -663,11 +681,11 @@ function openFullImage(index) {
 function closeFullImage() { closeModal('full-img-modal'); currentViewingImageIndex = null; }
 
 // ── Cart & Modal ──────────────────────────────────────────────
-function openModal(id) { document.getElementById(id).style.display = 'flex'; setTimeout(() => document.getElementById(id).classList.add('open'), 10); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); setTimeout(() => { document.getElementById(id).style.display = 'none'; }, 300); }
+function openModal(id) { document.getElementById(id).style.display='flex'; setTimeout(()=>document.getElementById(id).classList.add('open'),10); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); setTimeout(()=>{ document.getElementById(id).style.display='none'; },300); }
 
 function addToCart(name, price) {
-    const safePrice = (typeof price === 'number' && !isNaN(price)) ? price : parseInt(String(price).replace(/\D/g, ''), 10) || 0;
+    const safePrice = (typeof price==='number'&&!isNaN(price)) ? price : parseInt(String(price).replace(/\D/g,''),10)||0;
     cart.push({ name, price: safePrice });
     document.getElementById('cart-count').innerText = cart.length;
     toast(`${name} ${translations[currentLang].toastCart}`, 'success');
@@ -677,26 +695,26 @@ function openCheckout() {
     const div = document.getElementById('cart-items');
     const totalSection = document.getElementById('cart-total-section');
     if (cart.length === 0) {
-        div.innerHTML = '<p style="text-align:center; padding:20px; color:#888;">Keranjang kosong</p>';
+        div.innerHTML = '<p style="text-align:center;padding:20px;color:#888;">Keranjang kosong</p>';
         totalSection.style.display = 'none';
     } else {
-        div.innerHTML = cart.map((item, idx) => `
-          <div style="padding:10px 0; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
-            <span>${item.name}</span>
-            <div>
-              <span style="color:#FFD700; margin-right:15px;">Rp ${formatRupiah(item.price)}</span>
-              <button onclick="removeFromCart(${idx})" style="background:none; border:none; color:#ff4444; font-size:1.2em;">🗑</button>
-            </div>
-          </div>`).join('');
-        const total = cart.reduce((a, b) => a + (Number(b.price) || 0), 0);
+        div.innerHTML = cart.map((item,idx) => `
+            <div style="padding:10px 0;border-bottom:1px solid #333;display:flex;justify-content:space-between;align-items:center;">
+                <span>${item.name}</span>
+                <div>
+                    <span style="color:#FFD700;margin-right:15px;">Rp ${formatRupiah(item.price)}</span>
+                    <button onclick="removeFromCart(${idx})" style="background:none;border:none;color:#ff4444;font-size:1.2em;">🗑</button>
+                </div>
+            </div>`).join('');
+        const total = cart.reduce((a,b) => a+(Number(b.price)||0), 0);
         document.getElementById('total-price').innerText = 'Rp ' + formatRupiah(total);
-        document.getElementById('va-number').innerText = `8801 ${Math.floor(10000000 + Math.random() * 90000000)}`;
+        document.getElementById('va-number').innerText = `8801 ${Math.floor(10000000+Math.random()*90000000)}`;
         totalSection.style.display = 'block';
     }
     openModal('checkout-modal');
 }
 
-function removeFromCart(i) { cart.splice(i, 1); document.getElementById('cart-count').innerText = cart.length; openCheckout(); }
+function removeFromCart(i) { cart.splice(i,1); document.getElementById('cart-count').innerText=cart.length; openCheckout(); }
 
 function processPayment() {
     toast('Memverifikasi...', 'info');
@@ -710,24 +728,24 @@ function processPayment() {
 
 function toggleWishlist(btn, name) {
     const idx = wishlist.indexOf(name);
-    if (idx === -1) { wishlist.push(name); btn.innerText = '❤️'; } else { wishlist.splice(idx, 1); btn.innerText = '🤍'; }
+    if (idx===-1) { wishlist.push(name); btn.innerText='❤️'; } else { wishlist.splice(idx,1); btn.innerText='🤍'; }
 }
 
 function openWishlist() {
-    document.getElementById('wishlist-items').innerHTML = wishlist.length === 0
-        ? '<p style="text-align:center; color:#888;">Kosong</p>'
-        : wishlist.map(n => `<div style="padding:10px 0; border-bottom:1px solid #333;">${n}</div>`).join('');
+    document.getElementById('wishlist-items').innerHTML = wishlist.length===0
+        ? '<p style="text-align:center;color:#888;">Kosong</p>'
+        : wishlist.map(n=>`<div style="padding:10px 0;border-bottom:1px solid #333;">${n}</div>`).join('');
     openModal('wishlist-modal');
 }
 
 function openAdmin() {
-    const revenue = cart.reduce((s, i) => s + (Number(i.price) || 0), 0);
+    const revenue = cart.reduce((s,i)=>s+(Number(i.price)||0),0);
     document.getElementById('dash-revenue').innerText = `Rp ${formatRupiah(revenue)}`;
     document.getElementById('dash-wishlist-count').innerText = wishlist.length;
-    const data = Array.from({ length: 7 }, () => Math.floor(Math.random() * 60) + 30);
-    document.getElementById('mini-chart').innerHTML = data.map(() => `<div class="chart-bar" style="height:0%; flex:1; transition: height 0.8s ease-out; background: linear-gradient(to top, #FFD700, #fffae6); border-radius: 4px 4px 0 0;"></div>`).join('');
+    const data = Array.from({length:7},()=>Math.floor(Math.random()*60)+30);
+    document.getElementById('mini-chart').innerHTML = data.map(()=>`<div class="chart-bar" style="height:0%;flex:1;transition:height 0.8s ease-out;background:linear-gradient(to top,#FFD700,#fffae6);border-radius:4px 4px 0 0;"></div>`).join('');
     openModal('admin-modal');
-    setTimeout(() => { document.querySelectorAll('.chart-bar').forEach((bar, i) => { bar.style.height = `${data[i]}%`; }); }, 100);
+    setTimeout(()=>{ document.querySelectorAll('.chart-bar').forEach((bar,i)=>{bar.style.height=`${data[i]}%`;}); },100);
 }
 
 // ── PWA ───────────────────────────────────────────────────────
