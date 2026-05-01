@@ -34,8 +34,8 @@
       <p class="hero-sub" data-i18n="heroSub">AI Style Advisor · Smart Inventory · Business Intelligence</p>
       <div class="hero-stats">
         <div class="stat-pill"><span class="stat-dot"></span><span data-i18n="statLive">Live <b>AI</b> Active</span></div>
-        <div class="stat-pill">💎 <b id="total-koleksi">17</b> <span data-i18n="statCol">Koleksi</span></div>
-        <div class="stat-pill">📦 <b id="total-stok">170</b> <span data-i18n="statStock">Stok</span></div>
+        <div class="stat-pill">💎 <b id="total-koleksi">21</b> <span data-i18n="statCol">Koleksi</span></div>
+        <div class="stat-pill">📦 <b id="total-stok">210</b> <span data-i18n="statStock">Stok</span></div>
       </div>
     </div>
 
@@ -48,7 +48,6 @@
       </div>
     </div>
 
-    <!-- FILTER KATEGORI — ditambah Wig, Skincare, Makeup -->
     <div class="category-scroll" id="category-filters">
       <button class="cat-btn active" onclick="filterProducts('semua', this)" data-i18n="catAll">Semua Koleksi</button>
       <button class="cat-btn" onclick="filterProducts('pakaian', this)" data-i18n="catClothes">Pakaian</button>
@@ -61,7 +60,7 @@
 
     <div class="section-header">
       <span class="section-title" data-i18n="secTitle">Koleksi Terpilih</span>
-      <span class="section-count" id="product-count">17 produk</span>
+      <span class="section-count" id="product-count">21 produk</span>
     </div>
 
     <div class="product-grid" id="products">
@@ -72,11 +71,11 @@
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Blouse 2245')">🤍</button>
         <div class="product-body">
           <div class="product-meta">
-            <div><div class="product-name">Blouse 2245</div><div class="product-sub">Elegant Striped Top</div></div>
+            <div><div class="product-name" data-i18n-prod="blouse2245Name">Blouse 2245</div><div class="product-sub">Elegant Striped Top</div></div>
             <span class="stock-tag in" style="color:#FFD700;">🤖 AI: Tren Naik</span>
           </div>
           <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">5.0 (42)</span></div>
-          <div class="product-price">Rp <span class="price-val">185.000</span></div>
+          <div class="product-price" data-price="185000"><span class="price-currency">Rp</span> <span class="price-val">185.000</span></div>
           <div class="actions">
             <div class="actions-row">
               <button class="btn btn-ghost" onclick="startSeamlessVTO('img-blouse')" data-i18n="btnTry">✨ Coba Live</button>
@@ -92,11 +91,11 @@
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Kalung Mutiara')">🤍</button>
         <div class="product-body">
           <div class="product-meta">
-            <div><div class="product-name">Kalung Mutiara</div><div class="product-sub">Classic White Pearl</div></div>
+            <div><div class="product-name" data-i18n-prod="kalungMutiaraName">Kalung Mutiara</div><div class="product-sub">Classic White Pearl</div></div>
             <span class="stock-tag in">10 ada</span>
           </div>
           <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">4.9 (38)</span></div>
-          <div class="product-price">Rp <span class="price-val">350.000</span></div>
+          <div class="product-price" data-price="350000"><span class="price-currency">Rp</span> <span class="price-val">350.000</span></div>
           <div class="actions">
             <div class="actions-row">
               <button class="btn btn-ghost" onclick="startSeamlessVTO('img-kalung-mutiara')" data-i18n="btnTry">✨ Coba Live</button>
@@ -112,11 +111,11 @@
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Kalung Emas 211')">🤍</button>
         <div class="product-body">
           <div class="product-meta">
-            <div><div class="product-name">Kalung Emas 211</div><div class="product-sub">Pure Gold 24k</div></div>
+            <div><div class="product-name" data-i18n-prod="kalungEmasName">Kalung Emas 211</div><div class="product-sub">Pure Gold 24k</div></div>
             <span class="stock-tag in" style="color:#ff4444;">🤖 AI: Sisa 2!</span>
           </div>
           <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">5.0 (55)</span></div>
-          <div class="product-price">Rp <span class="price-val">2.500.000</span></div>
+          <div class="product-price" data-price="2500000"><span class="price-currency">Rp</span> <span class="price-val">2.500.000</span></div>
           <div class="actions">
             <div class="actions-row">
               <button class="btn btn-ghost" onclick="startSeamlessVTO('img-kalung-emas')" data-i18n="btnTry">✨ Coba Live</button>
@@ -132,11 +131,11 @@
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Rok Mini Hitam')">🤍</button>
         <div class="product-body">
           <div class="product-meta">
-            <div><div class="product-name">Rok Mini Hitam</div><div class="product-sub">Chic Black Skirt</div></div>
+            <div><div class="product-name" data-i18n-prod="rokMiniName">Rok Mini Hitam</div><div class="product-sub">Chic Black Skirt</div></div>
             <span class="stock-tag in">10 ada</span>
           </div>
           <div class="product-rating"><span class="stars">★★★★☆</span> <span class="rating-count">4.7 (29)</span></div>
-          <div class="product-price">Rp <span class="price-val">120.000</span></div>
+          <div class="product-price" data-price="120000"><span class="price-currency">Rp</span> <span class="price-val">120.000</span></div>
           <div class="actions">
             <div class="actions-row">
               <button class="btn btn-ghost" onclick="startSeamlessVTO('img-rok-hitam')" data-i18n="btnTry">✨ Coba Live</button>
@@ -152,11 +151,11 @@
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Rok Levis 121')">🤍</button>
         <div class="product-body">
           <div class="product-meta">
-            <div><div class="product-name">Rok Levis 121</div><div class="product-sub">Vintage Denim</div></div>
+            <div><div class="product-name" data-i18n-prod="rokLevisName">Rok Levis 121</div><div class="product-sub">Vintage Denim</div></div>
             <span class="stock-tag in">10 ada</span>
           </div>
           <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">4.8 (60)</span></div>
-          <div class="product-price">Rp <span class="price-val">165.000</span></div>
+          <div class="product-price" data-price="165000"><span class="price-currency">Rp</span> <span class="price-val">165.000</span></div>
           <div class="actions">
             <div class="actions-row">
               <button class="btn btn-ghost" onclick="startSeamlessVTO('img-rok-levis')" data-i18n="btnTry">✨ Coba Live</button>
@@ -167,20 +166,21 @@
         </div>
       </div>
 
+      <!-- ===== TOPI — BUG FIX: hapus VTO, ganti jadi saran AI saja ===== -->
       <div class="product-card" data-name="topi streetwear" data-category="aksesoris" data-id="p6">
         <div class="product-img-wrap"><img src="topi-xx.jpg" alt="Topi xx" id="img-topi-xx"></div>
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Topi xx')">🤍</button>
         <div class="product-body">
           <div class="product-meta">
-            <div><div class="product-name">Topi xx</div><div class="product-sub">Streetwear Cap</div></div>
+            <div><div class="product-name" data-i18n-prod="topiName">Topi xx</div><div class="product-sub">Streetwear Cap</div></div>
             <span class="stock-tag in">10 ada</span>
           </div>
           <div class="product-rating"><span class="stars">★★★★☆</span> <span class="rating-count">4.5 (15)</span></div>
-          <div class="product-price">Rp <span class="price-val">85.000</span></div>
+          <div class="product-price" data-price="85000"><span class="price-currency">Rp</span> <span class="price-val">85.000</span></div>
           <div class="actions">
             <div class="actions-row">
-              <button class="btn btn-ghost" onclick="startSeamlessVTO('img-topi-xx')" data-i18n="btnTry">✨ Coba Live</button>
-              <button class="btn btn-white" onclick="addToCart('Topi xx', 85000)" data-i18n="btnAddCart">+ Keranjang</button>
+              <button class="btn btn-ghost" onclick="addToCart('Topi xx', 85000)" data-i18n="btnAddCart">+ Keranjang</button>
+              <button class="btn btn-white" onclick="askAIAbaoutProduct('Topi xx')" data-i18n="btnSaran">🤖 Saran AI</button>
             </div>
             <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Topi xx')" data-i18n="btnSaran">🤖 Minta Saran AI</button>
           </div>
@@ -192,11 +192,11 @@
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Kaca Mata gc')">🤍</button>
         <div class="product-body">
           <div class="product-meta">
-            <div><div class="product-name">Kaca Mata gc</div><div class="product-sub">UV Protect</div></div>
+            <div><div class="product-name" data-i18n-prod="kacamataName">Kaca Mata gc</div><div class="product-sub">UV Protect</div></div>
             <span class="stock-tag in">10 ada</span>
           </div>
           <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">5.0 (82)</span></div>
-          <div class="product-price">Rp <span class="price-val">150.000</span></div>
+          <div class="product-price" data-price="150000"><span class="price-currency">Rp</span> <span class="price-val">150.000</span></div>
           <div class="actions">
             <div class="actions-row">
               <button class="btn btn-ghost" onclick="startSeamlessVTO('img-kacamata-gc')" data-i18n="btnTry">✨ Coba Live</button>
@@ -207,18 +207,17 @@
         </div>
       </div>
 
-      <!-- ===== PRODUK BARU: WIG ===== -->
-
+      <!-- ===== PRODUK WIG ===== -->
       <div class="product-card" data-name="wig brown pendek" data-category="wig" data-id="p8">
         <div class="product-img-wrap"><img src="wig-brown-pendek.jpg" alt="Wig Brown Pendek" id="img-wig-brown-pendek"></div>
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Wig Brown Pendek')">🤍</button>
         <div class="product-body">
           <div class="product-meta">
-            <div><div class="product-name">Wig Brown Pendek</div><div class="product-sub">Bob Cut Natural Brown</div></div>
+            <div><div class="product-name" data-i18n-prod="wigBrownName">Wig Brown Pendek</div><div class="product-sub">Bob Cut Natural Brown</div></div>
             <span class="stock-tag in" style="color:#FFD700;">🤖 AI: Tren Naik</span>
           </div>
           <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">4.9 (34)</span></div>
-          <div class="product-price">Rp <span class="price-val">280.000</span></div>
+          <div class="product-price" data-price="280000"><span class="price-currency">Rp</span> <span class="price-val">280.000</span></div>
           <div class="actions">
             <div class="actions-row">
               <button class="btn btn-ghost" onclick="tryWigYoucam('wig-brown-pendek.jpg', 'Wig Brown Pendek')">💇 Coba Wig</button>
@@ -234,11 +233,11 @@
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Wig Gaya 12')">🤍</button>
         <div class="product-body">
           <div class="product-meta">
-            <div><div class="product-name">Wig Gaya 12</div><div class="product-sub">Style Series — Lurus Panjang</div></div>
+            <div><div class="product-name" data-i18n-prod="wigGaya12Name">Wig Gaya 12</div><div class="product-sub">Style Series — Lurus Panjang</div></div>
             <span class="stock-tag in">10 ada</span>
           </div>
           <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">5.0 (21)</span></div>
-          <div class="product-price">Rp <span class="price-val">320.000</span></div>
+          <div class="product-price" data-price="320000"><span class="price-currency">Rp</span> <span class="price-val">320.000</span></div>
           <div class="actions">
             <div class="actions-row">
               <button class="btn btn-ghost" onclick="tryWigYoucam('wig-gaya-12.jpg', 'Wig Gaya 12')">💇 Coba Wig</button>
@@ -254,11 +253,11 @@
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Wig Ikal Pelangi')">🤍</button>
         <div class="product-body">
           <div class="product-meta">
-            <div><div class="product-name">Wig Ikal Pelangi</div><div class="product-sub">Curly Rainbow Gradient</div></div>
+            <div><div class="product-name" data-i18n-prod="wigIkalPelangiName">Wig Ikal Pelangi</div><div class="product-sub">Curly Rainbow Gradient</div></div>
             <span class="stock-tag in" style="color:#FFD700;">🤖 AI: Tren Naik</span>
           </div>
           <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">5.0 (47)</span></div>
-          <div class="product-price">Rp <span class="price-val">375.000</span></div>
+          <div class="product-price" data-price="375000"><span class="price-currency">Rp</span> <span class="price-val">375.000</span></div>
           <div class="actions">
             <div class="actions-row">
               <button class="btn btn-ghost" onclick="tryWigYoucam('wig-ikal-pelangi.jpg', 'Wig Ikal Pelangi')">💇 Coba Wig</button>
@@ -274,11 +273,11 @@
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Wig Pendek Pelangi')">🤍</button>
         <div class="product-body">
           <div class="product-meta">
-            <div><div class="product-name">Wig Pendek Pelangi</div><div class="product-sub">Pixie Cut Rainbow</div></div>
+            <div><div class="product-name" data-i18n-prod="wigPendekPelangiName">Wig Pendek Pelangi</div><div class="product-sub">Pixie Cut Rainbow</div></div>
             <span class="stock-tag in">10 ada</span>
           </div>
           <div class="product-rating"><span class="stars">★★★★☆</span> <span class="rating-count">4.6 (18)</span></div>
-          <div class="product-price">Rp <span class="price-val">290.000</span></div>
+          <div class="product-price" data-price="290000"><span class="price-currency">Rp</span> <span class="price-val">290.000</span></div>
           <div class="actions">
             <div class="actions-row">
               <button class="btn btn-ghost" onclick="tryWigYoucam('wig-pendek-pelangi.jpg', 'Wig Pendek Pelangi')">💇 Coba Wig</button>
@@ -294,11 +293,11 @@
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Wig Ikal 201')">🤍</button>
         <div class="product-body">
           <div class="product-meta">
-            <div><div class="product-name">Wig Ikal 201</div><div class="product-sub">Natural Curly Series</div></div>
+            <div><div class="product-name" data-i18n-prod="wigIkal201Name">Wig Ikal 201</div><div class="product-sub">Natural Curly Series</div></div>
             <span class="stock-tag in" style="color:#ff4444;">🤖 AI: Sisa 3!</span>
           </div>
           <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">5.0 (63)</span></div>
-          <div class="product-price">Rp <span class="price-val">310.000</span></div>
+          <div class="product-price" data-price="310000"><span class="price-currency">Rp</span> <span class="price-val">310.000</span></div>
           <div class="actions">
             <div class="actions-row">
               <button class="btn btn-ghost" onclick="tryWigYoucam('wig-ikal-201.jpg', 'Wig Ikal 201')">💇 Coba Wig</button>
@@ -309,18 +308,17 @@
         </div>
       </div>
 
-      <!-- ===== PRODUK BARU: SKINCARE ===== -->
-
+      <!-- ===== SKINCARE ===== -->
       <div class="product-card" data-name="skincare jerawat" data-category="skincare" data-id="p13">
         <div class="product-img-wrap"><img src="skincare-jerawat.jpg" alt="Skincare Jerawat" id="img-skincare-jerawat"></div>
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Skincare Jerawat')">🤍</button>
         <div class="product-body">
           <div class="product-meta">
-            <div><div class="product-name">Skincare Jerawat</div><div class="product-sub">Acne Clear Series</div></div>
+            <div><div class="product-name" data-i18n-prod="skincareJerawatName">Skincare Jerawat</div><div class="product-sub">Acne Clear Series</div></div>
             <span class="stock-tag in" style="color:#FFD700;">🤖 AI: Best Seller</span>
           </div>
           <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">4.9 (112)</span></div>
-          <div class="product-price">Rp <span class="price-val">195.000</span></div>
+          <div class="product-price" data-price="195000"><span class="price-currency">Rp</span> <span class="price-val">195.000</span></div>
           <div class="actions">
             <div class="actions-row">
               <button class="btn btn-ghost" onclick="analyzeSkincareYoucam('skincare-jerawat', 'Skincare Jerawat')">✨ Analisis Kulit</button>
@@ -336,11 +334,11 @@
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Skincare Pemutih')">🤍</button>
         <div class="product-body">
           <div class="product-meta">
-            <div><div class="product-name">Skincare Pemutih</div><div class="product-sub">Brightening & Glow Series</div></div>
+            <div><div class="product-name" data-i18n-prod="skincarePemutihName">Skincare Pemutih</div><div class="product-sub">Brightening &amp; Glow Series</div></div>
             <span class="stock-tag in">10 ada</span>
           </div>
           <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">4.8 (88)</span></div>
-          <div class="product-price">Rp <span class="price-val">215.000</span></div>
+          <div class="product-price" data-price="215000"><span class="price-currency">Rp</span> <span class="price-val">215.000</span></div>
           <div class="actions">
             <div class="actions-row">
               <button class="btn btn-ghost" onclick="analyzeSkincareYoucam('skincare-pemutih', 'Skincare Pemutih')">✨ Analisis Kulit</button>
@@ -351,18 +349,17 @@
         </div>
       </div>
 
-      <!-- ===== PRODUK BARU: MAKEUP ===== -->
-
+      <!-- ===== MAKEUP LAMA ===== -->
       <div class="product-card" data-name="lipstik merah 01" data-category="makeup" data-id="p15">
         <div class="product-img-wrap"><img src="lipstik-merah-01.jpg" alt="Lipstik Merah 01" id="img-lipstik-merah"></div>
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Lipstik Merah 01')">🤍</button>
         <div class="product-body">
           <div class="product-meta">
-            <div><div class="product-name">Lipstik Merah 01</div><div class="product-sub">Matte Bold Red</div></div>
+            <div><div class="product-name" data-i18n-prod="lipstikMerahName">Lipstik Merah 01</div><div class="product-sub">Matte Bold Red</div></div>
             <span class="stock-tag in" style="color:#FFD700;">🤖 AI: Tren Naik</span>
           </div>
           <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">5.0 (76)</span></div>
-          <div class="product-price">Rp <span class="price-val">75.000</span></div>
+          <div class="product-price" data-price="75000"><span class="price-currency">Rp</span> <span class="price-val">75.000</span></div>
           <div class="actions">
             <div class="actions-row">
               <button class="btn btn-ghost" onclick="tryMakeupYoucam('lipstik-merah-01.jpg', 'lips', 'Lipstik Merah 01')">💄 Coba Makeup</button>
@@ -378,11 +375,11 @@
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Lipstik Pink 02')">🤍</button>
         <div class="product-body">
           <div class="product-meta">
-            <div><div class="product-name">Lipstik Pink 02</div><div class="product-sub">Glossy Nude Pink</div></div>
+            <div><div class="product-name" data-i18n-prod="lipstikPinkName">Lipstik Pink 02</div><div class="product-sub">Glossy Nude Pink</div></div>
             <span class="stock-tag in">10 ada</span>
           </div>
           <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">4.9 (54)</span></div>
-          <div class="product-price">Rp <span class="price-val">75.000</span></div>
+          <div class="product-price" data-price="75000"><span class="price-currency">Rp</span> <span class="price-val">75.000</span></div>
           <div class="actions">
             <div class="actions-row">
               <button class="btn btn-ghost" onclick="tryMakeupYoucam('lipstik-pink-02.jpg', 'lips', 'Lipstik Pink 02')">💄 Coba Makeup</button>
@@ -398,17 +395,103 @@
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Eyeshadow 001')">🤍</button>
         <div class="product-body">
           <div class="product-meta">
-            <div><div class="product-name">Eyeshadow 001</div><div class="product-sub">Smoky Eye Palette</div></div>
+            <div><div class="product-name" data-i18n-prod="eyeshadow001Name">Eyeshadow 001</div><div class="product-sub">Smoky Eye Palette</div></div>
             <span class="stock-tag in" style="color:#ff4444;">🤖 AI: Sisa 4!</span>
           </div>
           <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">5.0 (91)</span></div>
-          <div class="product-price">Rp <span class="price-val">120.000</span></div>
+          <div class="product-price" data-price="120000"><span class="price-currency">Rp</span> <span class="price-val">120.000</span></div>
           <div class="actions">
             <div class="actions-row">
               <button class="btn btn-ghost" onclick="tryMakeupYoucam('eyeshadow-001.jpg', 'eyes', 'Eyeshadow 001')">💄 Coba Makeup</button>
               <button class="btn btn-white" onclick="addToCart('Eyeshadow 001', 120000)">+ Keranjang</button>
             </div>
             <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Eyeshadow 001')">🤖 Minta Saran AI</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 4 PRODUK BARU ===== -->
+
+      <!-- PRODUK BARU 1: Lipstik Coklat Gold -->
+      <div class="product-card" data-name="lipstik coklat gold" data-category="makeup" data-id="p18">
+        <div class="product-img-wrap"><img src="lipstik-coklat-gold.jpg" alt="Lipstik Coklat Gold" id="img-lipstik-coklat-gold"></div>
+        <button class="wishlist-btn" onclick="toggleWishlist(this, 'Lipstik Coklat Gold')">🤍</button>
+        <div class="product-body">
+          <div class="product-meta">
+            <div><div class="product-name" data-i18n-prod="lipstikCoklatGoldName">Lipstik Coklat Gold</div><div class="product-sub">Velvet Brown Gold</div></div>
+            <span class="stock-tag in" style="color:#FFD700;">🤖 AI: Tren Naik</span>
+          </div>
+          <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">5.0 (68)</span></div>
+          <div class="product-price" data-price="89000"><span class="price-currency">Rp</span> <span class="price-val">89.000</span></div>
+          <div class="actions">
+            <div class="actions-row">
+              <button class="btn btn-ghost" onclick="tryMakeupYoucam('lipstik-coklat-gold.jpg', 'lips', 'Lipstik Coklat Gold')">💄 Coba Makeup</button>
+              <button class="btn btn-white" onclick="addToCart('Lipstik Coklat Gold', 89000)">+ Keranjang</button>
+            </div>
+            <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Lipstik Coklat Gold')">🤖 Minta Saran AI</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRODUK BARU 2: Eyeshadow Gold -->
+      <div class="product-card" data-name="eyeshadow gold" data-category="makeup" data-id="p19">
+        <div class="product-img-wrap"><img src="eyeshadow-gold.jpg" alt="Eyeshadow Gold" id="img-eyeshadow-gold"></div>
+        <button class="wishlist-btn" onclick="toggleWishlist(this, 'Eyeshadow Gold')">🤍</button>
+        <div class="product-body">
+          <div class="product-meta">
+            <div><div class="product-name" data-i18n-prod="eyeshadowGoldName">Eyeshadow Gold</div><div class="product-sub">Glam Gold Palette</div></div>
+            <span class="stock-tag in" style="color:#FFD700;">🤖 AI: Best Seller</span>
+          </div>
+          <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">5.0 (83)</span></div>
+          <div class="product-price" data-price="135000"><span class="price-currency">Rp</span> <span class="price-val">135.000</span></div>
+          <div class="actions">
+            <div class="actions-row">
+              <button class="btn btn-ghost" onclick="tryMakeupYoucam('eyeshadow-gold.jpg', 'eyes', 'Eyeshadow Gold')">💄 Coba Makeup</button>
+              <button class="btn btn-white" onclick="addToCart('Eyeshadow Gold', 135000)">+ Keranjang</button>
+            </div>
+            <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Eyeshadow Gold')">🤖 Minta Saran AI</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRODUK BARU 3: Baju Kemeja Panjang -->
+      <div class="product-card" data-name="baju kemeja panjang" data-category="pakaian" data-id="p20">
+        <div class="product-img-wrap"><img src="kemeja-panjang.jpg" alt="Kemeja Panjang" id="img-kemeja-panjang"></div>
+        <button class="wishlist-btn" onclick="toggleWishlist(this, 'Kemeja Panjang')">🤍</button>
+        <div class="product-body">
+          <div class="product-meta">
+            <div><div class="product-name" data-i18n-prod="kemejaPanjangName">Kemeja Panjang</div><div class="product-sub">Formal Long Shirt</div></div>
+            <span class="stock-tag in">10 ada</span>
+          </div>
+          <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">4.8 (45)</span></div>
+          <div class="product-price" data-price="175000"><span class="price-currency">Rp</span> <span class="price-val">175.000</span></div>
+          <div class="actions">
+            <div class="actions-row">
+              <button class="btn btn-ghost" onclick="startSeamlessVTO('img-kemeja-panjang')" data-i18n="btnTry">✨ Coba Live</button>
+              <button class="btn btn-white" onclick="addToCart('Kemeja Panjang', 175000)" data-i18n="btnAddCart">+ Keranjang</button>
+            </div>
+            <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Kemeja Panjang')" data-i18n="btnSaran">🤖 Minta Saran AI</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRODUK BARU 4: Baju Kaos Olahraga -->
+      <div class="product-card" data-name="baju kaos olahraga" data-category="pakaian" data-id="p21">
+        <div class="product-img-wrap"><img src="kaos-olahraga.jpg" alt="Kaos Olahraga" id="img-kaos-olahraga"></div>
+        <button class="wishlist-btn" onclick="toggleWishlist(this, 'Kaos Olahraga')">🤍</button>
+        <div class="product-body">
+          <div class="product-meta">
+            <div><div class="product-name" data-i18n-prod="kaosOlahragaName">Kaos Olahraga</div><div class="product-sub">Sport Active Wear</div></div>
+            <span class="stock-tag in" style="color:#FFD700;">🤖 AI: Tren Naik</span>
+          </div>
+          <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">4.9 (37)</span></div>
+          <div class="product-price" data-price="145000"><span class="price-currency">Rp</span> <span class="price-val">145.000</span></div>
+          <div class="actions">
+            <div class="actions-row">
+              <button class="btn btn-ghost" onclick="startSeamlessVTO('img-kaos-olahraga')" data-i18n="btnTry">✨ Coba Live</button>
+              <button class="btn btn-white" onclick="addToCart('Kaos Olahraga', 145000)" data-i18n="btnAddCart">+ Keranjang</button>
+            </div>
+            <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Kaos Olahraga')" data-i18n="btnSaran">🤖 Minta Saran AI</button>
           </div>
         </div>
       </div>
@@ -426,93 +509,74 @@
         </div>
 
         <div class="chat-history" id="chat-history">
-
-            <!-- Pesan sapaan awal AI -->
             <div class="chat-msg bot" id="ai-greeting-msg">
                 Halo <b>Vivi!</b> 👋 Saya <b>LuxArc AI</b> — asisten gaya personalmu.<br>
                 Apa yang bisa saya bantu hari ini?
             </div>
-
-            <!-- Tombol pilihan cepat (quick replies) -->
             <div class="ai-quick-replies" id="ai-quick-replies">
-                <button class="ai-quick-btn" onclick="handleQuickReply('makeup')">
-                    💄 Rekomendasi Makeup
-                </button>
-                <button class="ai-quick-btn" onclick="handleQuickReply('wig')">
-                    💇 Coba Gaya Rambut / Wig
-                </button>
-                <button class="ai-quick-btn" onclick="handleQuickReply('fashion')">
-                    👗 Cari Pakaian &amp; Perhiasan
-                </button>
-                <button class="ai-quick-btn" onclick="handleQuickReply('skinanalysis')">
-                    🔬 Analisis Kulit Saya
-                </button>
-                <button class="ai-quick-btn" onclick="handleQuickReply('free')">
-                    💬 Tanya Bebas
-                </button>
+                <button class="ai-quick-btn" onclick="handleQuickReply('makeup')">💄 Rekomendasi Makeup</button>
+                <button class="ai-quick-btn" onclick="handleQuickReply('wig')">💇 Coba Gaya Rambut / Wig</button>
+                <button class="ai-quick-btn" onclick="handleQuickReply('fashion')">👗 Cari Pakaian &amp; Perhiasan</button>
+                <button class="ai-quick-btn" onclick="handleQuickReply('skinanalysis')">🔬 Analisis Kulit Saya</button>
+                <button class="ai-quick-btn" onclick="handleQuickReply('free')">💬 Tanya Bebas</button>
             </div>
+        </div>
 
-        </div><!-- /chat-history -->
-
-        <!-- Sub-menu Makeup (hidden, muncul saat pilih makeup) -->
+        <!-- Sub-menu Makeup -->
         <div class="ai-submenu" id="submenu-makeup" style="display:none;">
             <p class="submenu-label">Pilih produk makeup yang ingin dicoba:</p>
             <div class="submenu-scroll">
                 <button class="submenu-item" onclick="tryMakeupYoucam('lipstik-merah-01.jpg','lips','Lipstik Merah 01')">
-                    <img src="lipstik-merah-01.jpg" alt="Lipstik Merah">
-                    <span>Lipstik Merah 01</span>
+                    <img src="lipstik-merah-01.jpg" alt="Lipstik Merah"><span>Lipstik Merah 01</span>
                 </button>
                 <button class="submenu-item" onclick="tryMakeupYoucam('lipstik-pink-02.jpg','lips','Lipstik Pink 02')">
-                    <img src="lipstik-pink-02.jpg" alt="Lipstik Pink">
-                    <span>Lipstik Pink 02</span>
+                    <img src="lipstik-pink-02.jpg" alt="Lipstik Pink"><span>Lipstik Pink 02</span>
+                </button>
+                <button class="submenu-item" onclick="tryMakeupYoucam('lipstik-coklat-gold.jpg','lips','Lipstik Coklat Gold')">
+                    <img src="lipstik-coklat-gold.jpg" alt="Lipstik Coklat Gold"><span>Lipstik Coklat Gold</span>
                 </button>
                 <button class="submenu-item" onclick="tryMakeupYoucam('eyeshadow-001.jpg','eyes','Eyeshadow 001')">
-                    <img src="eyeshadow-001.jpg" alt="Eyeshadow">
-                    <span>Eyeshadow 001</span>
+                    <img src="eyeshadow-001.jpg" alt="Eyeshadow"><span>Eyeshadow 001</span>
+                </button>
+                <button class="submenu-item" onclick="tryMakeupYoucam('eyeshadow-gold.jpg','eyes','Eyeshadow Gold')">
+                    <img src="eyeshadow-gold.jpg" alt="Eyeshadow Gold"><span>Eyeshadow Gold</span>
                 </button>
             </div>
             <button class="submenu-back" onclick="closeSubmenu()">← Kembali</button>
         </div>
 
-        <!-- Sub-menu Wig (hidden, muncul saat pilih wig) -->
+        <!-- Sub-menu Wig -->
         <div class="ai-submenu" id="submenu-wig" style="display:none;">
             <p class="submenu-label">Pilih gaya wig yang ingin dicoba:</p>
             <div class="submenu-scroll">
                 <button class="submenu-item" onclick="tryWigYoucam('wig-brown-pendek.jpg','Wig Brown Pendek')">
-                    <img src="wig-brown-pendek.jpg" alt="Wig Brown">
-                    <span>Brown Pendek</span>
+                    <img src="wig-brown-pendek.jpg" alt="Wig Brown"><span>Brown Pendek</span>
                 </button>
                 <button class="submenu-item" onclick="tryWigYoucam('wig-gaya-12.jpg','Wig Gaya 12')">
-                    <img src="wig-gaya-12.jpg" alt="Wig Gaya 12">
-                    <span>Gaya 12</span>
+                    <img src="wig-gaya-12.jpg" alt="Wig Gaya 12"><span>Gaya 12</span>
                 </button>
                 <button class="submenu-item" onclick="tryWigYoucam('wig-ikal-pelangi.jpg','Wig Ikal Pelangi')">
-                    <img src="wig-ikal-pelangi.jpg" alt="Wig Ikal Pelangi">
-                    <span>Ikal Pelangi</span>
+                    <img src="wig-ikal-pelangi.jpg" alt="Wig Ikal Pelangi"><span>Ikal Pelangi</span>
                 </button>
                 <button class="submenu-item" onclick="tryWigYoucam('wig-pendek-pelangi.jpg','Wig Pendek Pelangi')">
-                    <img src="wig-pendek-pelangi.jpg" alt="Wig Pendek Pelangi">
-                    <span>Pendek Pelangi</span>
+                    <img src="wig-pendek-pelangi.jpg" alt="Wig Pendek Pelangi"><span>Pendek Pelangi</span>
                 </button>
                 <button class="submenu-item" onclick="tryWigYoucam('wig-ikal-201.jpg','Wig Ikal 201')">
-                    <img src="wig-ikal-201.jpg" alt="Wig Ikal 201">
-                    <span>Ikal 201</span>
+                    <img src="wig-ikal-201.jpg" alt="Wig Ikal 201"><span>Ikal 201</span>
                 </button>
             </div>
             <button class="submenu-back" onclick="closeSubmenu()">← Kembali</button>
         </div>
 
-        <!-- Sub-menu Skincare (hidden, muncul saat pilih analisis kulit) -->
+        <!-- Sub-menu Skincare -->
         <div class="ai-submenu" id="submenu-skin" style="display:none;">
             <p class="submenu-label">Pilih concern kulit kamu:</p>
             <div class="submenu-scroll">
                 <button class="submenu-item" onclick="analyzeSkincareYoucam('skincare-jerawat','Skincare Jerawat')">
-                    <img src="skincare-jerawat.jpg" alt="Skincare Jerawat">
-                    <span>Anti Jerawat</span>
+                    <img src="skincare-jerawat.jpg" alt="Skincare Jerawat"><span>Anti Jerawat</span>
                 </button>
                 <button class="submenu-item" onclick="analyzeSkincareYoucam('skincare-pemutih','Skincare Pemutih')">
-                    <img src="skincare-pemutih.jpg" alt="Skincare Pemutih">
-                    <span>Brightening</span>
+                    <img src="skincare-pemutih.jpg" alt="Skincare Pemutih"><span>Brightening</span>
                 </button>
             </div>
             <button class="submenu-back" onclick="closeSubmenu()">← Kembali</button>
@@ -523,8 +587,8 @@
             <button class="chat-send-btn" onclick="sendChat()">➤</button>
         </div>
 
-    </div><!-- /chat-wrapper -->
-</div><!-- /page-ai -->
+    </div>
+</div>
 
 <!-- ===================== BOTTOM NAV ===================== -->
 <div class="bottom-nav">
@@ -559,6 +623,6 @@
 <div id="wishlist-modal" class="modal"><div class="modal-sheet glass-panel"><button class="modal-close" onclick="closeModal('wishlist-modal')">✕</button><p class="modal-title">Wishlist 🤍</p><div id="wishlist-items"></div></div></div>
 <div id="admin-modal" class="modal"><div class="modal-sheet glass-panel"><button class="modal-close" onclick="closeModal('admin-modal')">✕</button><p class="modal-title">Business Dashboard</p><div class="dash-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;"><div class="dash-kpi" style="background: linear-gradient(145deg, rgba(26,26,26,0.8), rgba(13,13,13,0.9)); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);"><div class="dash-kpi-label" style="font-size:0.8em; color:#aaa;">Pendapatan Est.</div><div class="dash-kpi-value gold" id="dash-revenue" style="color: #FFD700; font-size: 1.2em; font-weight:bold; margin-top:5px;">Rp 0</div></div><div class="dash-kpi" style="background: linear-gradient(145deg, rgba(26,26,26,0.8), rgba(13,13,13,0.9)); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);"><div class="dash-kpi-label" style="font-size:0.8em; color:#aaa;">Wishlist</div><div class="dash-kpi-value" id="dash-wishlist-count" style="font-size: 1.5em; font-weight:bold; margin-top:5px;">0</div></div></div><div class="mini-chart" id="mini-chart" style="display: flex; height: 100px; align-items: flex-end; gap: 5px; margin-top: 20px;"></div></div></div>
 
-<script src="script.js?v=2025050102"></script>
+<script src="script.js?v=2025050103"></script>
 </body>
 </html>
