@@ -1,4 +1,4 @@
-// api/youcam.js — Vercel Serverless Function v6 (+ SKIN ANALYSIS)
+// api/youcam.js — Vercel Serverless Function v7 (FIX dst_actions)
 const BASE_URL = 'https://yce-api-01.makeupar.com';
 
 export const config = {
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
 
   try {
 
-    // ── Skin Analysis ─────────────────────────────────────────
+    // ── Skin Analysis (FIXED: tambah dst_actions) ─────────────
     if (action === 'skin-analysis') {
       const { user_image_url } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
@@ -54,8 +54,19 @@ export default async function handler(req, res) {
       const startRes = await fetch(`${BASE_URL}/s2s/v2.0/task/skin-analysis`, {
         method: 'POST',
         headers: HEADERS,
-        body: JSON.stringify({ src_file_url: user_image_url }),
+        body: JSON.stringify({
+          src_file_url: user_image_url,
+          dst_actions: [
+            'acne',
+            'moisture',
+            'pores',
+            'wrinkles',
+            'radiance',
+            'skin_tone'
+          ],
+        }),
       });
+
       const startData = await startRes.json();
       if (!startRes.ok) return res.status(startRes.status).json(startData);
 
