@@ -1,12 +1,6 @@
-// api/youcam.js — Vercel Serverless Function v10 (BUGFIX)
-// Produk: AI Clothes V3, AI Necklace VTO, AI Makeup VTO,
-//         AI Hair Color, AI Hairstyle V2.1, Skin Analysis V2.1, AI Look VTO
-//
-// BugFix v10:
-//   [1] ai-hair-color: tambah field "pattern" wajib di setiap palette
-//       → tanpa ini YouCam return error "null pattern"
-//   [2] skin-analysis: tambah guard result undefined
-//       → jika result null/undefined setelah polling → return error jelas
+// api/youcam.js — Vercel Serverless Function v11 (VALID FIX)
+// Fix berdasarkan dokumentasi resmi YouCam API Playground
+// Hair Color API hanya butuh: src_file_url + preset (nama string)
 
 const BASE_URL = 'https://yce-api-01.makeupar.com';
 
@@ -21,6 +15,26 @@ const HAIRSTYLE_TEMPLATE_MAP = {
   wavy:     'wavy_01',
   bob:      'bob_01',
   pixie:    'pixie_01',
+};
+
+// Mapping nama warna UI (Indonesia) ke preset resmi YouCam
+const HAIR_PRESET_MAP = {
+  'merah':        'Burgundy',
+  'coklat':       'Chocolate Brown',
+  'ungu':         'Ash Brown/Lavender',
+  'biru':         'Ash Gray',
+  'hitam':        'Dark Gray/Ice Blonde',
+  'pirang':       'Copper Red/Golden Blonde',
+  // Nama preset lengkap (jika frontend kirim langsung dalam bahasa Inggris)
+  'burgundy':                   'Burgundy',
+  'burgundy/magenta pink':      'Burgundy/Magenta Pink',
+  'ash gray':                   'Ash Gray',
+  'ash brown/lavender':         'Ash Brown/Lavender',
+  'chocolate brown':            'Chocolate Brown',
+  'copper red':                 'Copper Red',
+  'copper red/golden blonde':   'Copper Red/Golden Blonde',
+  'dark brown/caramel blonde':  'Dark Brown/Caramel Blonde',
+  'dark gray/ice blonde':       'Dark Gray/Ice Blonde',
 };
 
 export default async function handler(req, res) {
@@ -175,7 +189,6 @@ export default async function handler(req, res) {
       try { result = await pollTask(taskId, '/s2s/v2.1/task/skin-analysis'); }
       catch (e) { return res.status(500).json({ error: e.message }); }
 
-      // [FIX v10] Guard: result bisa undefined jika polling timeout tanpa throw
       if (!result) {
         return res.status(500).json({ error: 'Skin analysis selesai tapi result kosong' });
       }
@@ -225,7 +238,6 @@ export default async function handler(req, res) {
 
       if (frontendEffect && frontendEffect.category) {
         effectObject = frontendEffect;
-        console.log('[makeup] Pakai effect dari frontend:', JSON.stringify(effectObject));
       } else {
         const col = color || '#E8A0A0';
 
@@ -262,7 +274,6 @@ export default async function handler(req, res) {
             palettes: [{ color: col, texture: 'matte', colorIntensity: 80 }],
           };
         }
-        console.log('[makeup] Bangun effect di backend untuk category:', cat);
       }
 
       const out = await runTask('/s2s/v2.0/task/makeup-vto', {
@@ -275,41 +286,32 @@ export default async function handler(req, res) {
     }
 
     // ── 5. AI Hair Color ────────────────────────────────────
-    // [FIX v10] Tambah field "pattern" wajib di setiap palette
-    // YouCam Hair Color API wajib ada pattern → tanpa ini error "null pattern"
+    // [FIX v11] Payload resmi YouCam: { src_file_url, preset: "NamaPreset" }
+    // Tidak pakai palettes/pattern/color hex — hanya preset name string
     if (action === 'ai-hair-color') {
-      const { user_image_url, color, color_name, preset, palettes } = body;
+      const { user_image_url, color, color_name, preset } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
 
-      let hairPayload = { src_file_url: user_image_url };
+      // Tentukan preset: prioritas dari field 'preset', lalu dari 'color_name', lalu dari 'color'
+      const rawInput = preset || color_name || color || '';
+      const resolvedPreset = HAIR_PRESET_MAP[rawInput.toLowerCase()] || rawInput;
 
-      if (preset) {
-        hairPayload.preset = preset;
-        console.log('[hair-color] Pakai preset:', preset);
+      if (!resolvedPreset) {
+        return res.status(400).json({
+          error: 'preset diperlukan. Contoh: "Burgundy", "Chocolate Brown", "Ash Gray"',
+          available_presets: Object.values(HAIR_PRESET_MAP).filter((v, i, a) => a.indexOf(v) === i),
+        });
       }
 
-      if (palettes && Array.isArray(palettes) && palettes.length > 0) {
-        // [FIX v10] Inject "pattern" ke setiap palette jika belum ada
-        // pattern.name "full" = warnai seluruh rambut
-        hairPayload.palettes = palettes.map(p => ({
-          ...p,
-          pattern: p.pattern || { name: 'full' },
-        }));
-        console.log('[hair-color] Palettes (fixed):', JSON.stringify(hairPayload.palettes));
-      } else if (color) {
-        hairPayload.palettes = [{
-          color: color,
-          colorIntensity: 75,
-          pattern: { name: 'full' }, // [FIX v10] wajib ada
-        }];
-        console.log('[hair-color] Bangun palettes dari color:', color);
-      } else if (!preset) {
-        return res.status(400).json({ error: 'color (hex), preset, atau palettes diperlukan' });
-      }
+      console.log(`[hair-color] Input: "${rawInput}" → Preset: "${resolvedPreset}"`);
 
-      const out = await runTask('/s2s/v2.0/task/hair-color', hairPayload);
+      const out = await runTask('/s2s/v2.0/task/hair-color', {
+        src_file_url: user_image_url,
+        preset: resolvedPreset,
+      });
+
       if (!out.success) return res.status(out.status || 500).json({ error: out.error, detail: out.detail });
-      return res.status(200).json({ result_url: out.result_url, color_name: color_name || '', ...out.raw });
+      return res.status(200).json({ result_url: out.result_url, color_name: resolvedPreset, ...out.raw });
     }
 
     // ── 6. AI Hairstyle V2.1 ────────────────────────────────
@@ -320,7 +322,6 @@ export default async function handler(req, res) {
       let finalTemplateId = template_id;
       if (!finalTemplateId && style) {
         finalTemplateId = HAIRSTYLE_TEMPLATE_MAP[style.toLowerCase()] || HAIRSTYLE_TEMPLATE_MAP['natural'];
-        console.log(`[hairstyle] Mapping style "${style}" → template_id "${finalTemplateId}"`);
       }
 
       if (!finalTemplateId && !ref_image_url) {
