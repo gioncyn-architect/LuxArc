@@ -1,6 +1,7 @@
-// api/youcam.js — Vercel Serverless Function v6
-// Fitur: AI Clothes, AI Accessory, AI Makeup, AI Hair Color,
-//        AI Hairstyle, AI Wig, Photo Enhancer, Skin Analysis
+// api/youcam.js — Vercel Serverless Function v7
+// Fitur: AI Clothes v3, AI Accessory (2D VTO Necklace), AI Makeup VTO,
+//        AI Hair Color, AI Hairstyle, AI Wig, Photo Enhancer,
+//        Skin Analysis v2.1, AI Look VTO
 
 const BASE_URL = 'https://yce-api-01.makeupar.com';
 
@@ -118,14 +119,14 @@ export default async function handler(req, res) {
   // ══════════════════════════════════════════════════════════
   try {
 
-    // ── 1. Skin Analysis ────────────────────────────────────
+    // ── 1. Skin Analysis V2.1 ───────────────────────────────
     if (action === 'skin-analysis') {
       const { user_image_url } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
 
       let startRes, rawText, startData;
       try {
-        startRes = await fetch(`${BASE_URL}/s2s/v2.0/task/skin-analysis`, {
+        startRes = await fetch(`${BASE_URL}/s2s/v2.1/task/skin-analysis`, {
           method: 'POST', headers: HEADERS,
           body: JSON.stringify({
             src_file_url: user_image_url,
@@ -148,19 +149,19 @@ export default async function handler(req, res) {
       if (!taskId) return res.status(500).json({ error: 'Tidak dapat task_id', detail: startData });
 
       let result;
-      try { result = await pollTask(taskId, '/s2s/v2.0/task/skin-analysis'); }
+      try { result = await pollTask(taskId, '/s2s/v2.1/task/skin-analysis'); }
       catch (e) { return res.status(500).json({ error: e.message }); }
 
       return res.status(200).json(result);
     }
 
-    // ── 2. AI Clothes ───────────────────────────────────────
+    // ── 2. AI Clothes V3.0 ──────────────────────────────────
     if (action === 'ai-clothes') {
       const { user_image_url, cloth_image_url } = body;
       if (!user_image_url)  return res.status(400).json({ error: 'user_image_url diperlukan' });
       if (!cloth_image_url) return res.status(400).json({ error: 'cloth_image_url diperlukan' });
 
-      const out = await runTask('/s2s/v2.0/task/cloth', {
+      const out = await runTask('/s2s/v2.0/task/cloth-v3', {
         src_file_url: user_image_url,
         ref_file_url: cloth_image_url,
         garment_category: 'auto',
@@ -170,14 +171,15 @@ export default async function handler(req, res) {
       return res.status(200).json({ result_url: out.result_url, ...out.raw });
     }
 
-    // ── 3. AI Accessory ─────────────────────────────────────
+    // ── 3. AI Accessory — 2D VTO Necklace ───────────────────
     if (action === 'ai-accessory') {
       const { user_image_url, accessory_image_url, accessory_type } = body;
       if (!user_image_url)      return res.status(400).json({ error: 'user_image_url diperlukan' });
       if (!accessory_image_url) return res.status(400).json({ error: 'accessory_image_url diperlukan' });
 
+      // Hat tetap pakai cloth-v3 dengan garment_category: 'hat'
       if (accessory_type === 'hat') {
-        const out = await runTask('/s2s/v2.0/task/cloth', {
+        const out = await runTask('/s2s/v2.0/task/cloth-v3', {
           src_file_url: user_image_url,
           ref_file_url: accessory_image_url,
           garment_category: 'hat',
@@ -187,11 +189,10 @@ export default async function handler(req, res) {
         return res.status(200).json({ result_url: out.result_url, ...out.raw });
       }
 
-      const out = await runTask('/s2s/v2.0/task/accessory', {
+      // Necklace & accessories lainnya → 2D VTO Necklace endpoint
+      const out = await runTask('/s2s/v2.0/task/2d-vto/necklace', {
         src_file_url: user_image_url,
-        source_info: { name: user_image_url },
-        ref_file_urls: [accessory_image_url],
-        ref_file_ids: [],
+        ref_file_url: accessory_image_url,
         object_infos: [{
           name: accessory_image_url,
           parameter: {
@@ -205,7 +206,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ result_url: out.result_url, ...out.raw });
     }
 
-    // ── 4. AI Makeup ────────────────────────────────────────
+    // ── 4. AI Makeup VTO ────────────────────────────────────
     if (action === 'ai-makeup') {
       const { user_image_url, zone, color } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
@@ -214,7 +215,7 @@ export default async function handler(req, res) {
       const eyeColor = color || '#8B4513';
       const category = zone === 'eye' || zone === 'eyes' ? 'eye_shadow' : 'lip_color';
 
-      const out = await runTask('/s2s/v2.0/task/makeup', {
+      const out = await runTask('/s2s/v2.0/task/makeup-vto', {
         src_file_url: user_image_url,
         effects: [{
           category,
@@ -233,13 +234,13 @@ export default async function handler(req, res) {
       return res.status(200).json({ result_url: out.result_url, ...out.raw });
     }
 
-    // ── 5. AI Hair Color (NEW) ──────────────────────────────
+    // ── 5. AI Hair Color ────────────────────────────────────
     if (action === 'ai-hair-color') {
       const { user_image_url, color, color_name } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
       if (!color)          return res.status(400).json({ error: 'color (hex) diperlukan' });
 
-      const out = await runTask('/s2s/v2.0/task/makeup', {
+      const out = await runTask('/s2s/v2.0/task/makeup-vto', {
         src_file_url: user_image_url,
         effects: [{
           category: 'hair_color',
@@ -265,7 +266,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ result_url: out.result_url, ...out.raw });
     }
 
-    // ── 7. AI Wig ────────────────────────────────────────────
+    // ── 7. AI Wig ───────────────────────────────────────────
     if (action === 'ai-wig') {
       const { user_image_url, template_id, wig_image_url } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
@@ -282,7 +283,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ result_url: out.result_url, ...out.raw });
     }
 
-    // ── 8. Photo Enhancer ────────────────────────────────────
+    // ── 8. Photo Enhancer ───────────────────────────────────
     if (action === 'photo-enhance') {
       const { user_image_url } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
@@ -295,13 +296,27 @@ export default async function handler(req, res) {
       return res.status(200).json({ result_url: out.result_url, ...out.raw });
     }
 
+    // ── 9. AI Look VTO ──────────────────────────────────────
+    if (action === 'ai-look') {
+      const { user_image_url, look_id } = body;
+      if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
+      if (!look_id)        return res.status(400).json({ error: 'look_id diperlukan' });
+
+      const out = await runTask('/s2s/v2.0/task/look-vto', {
+        src_file_url: user_image_url,
+        look_id,
+      });
+      if (!out.success) return res.status(out.status || 500).json({ error: out.error, detail: out.detail });
+      return res.status(200).json({ result_url: out.result_url, ...out.raw });
+    }
+
     // ── Action tidak dikenal ─────────────────────────────────
     return res.status(400).json({
       error: `Action tidak dikenal: "${action}"`,
       available_actions: [
         'skin-analysis','ai-clothes','ai-accessory',
         'ai-makeup','ai-hair-color','ai-hairstyle',
-        'ai-wig','photo-enhance',
+        'ai-wig','photo-enhance','ai-look',
       ],
     });
 
