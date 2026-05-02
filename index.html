@@ -9,6 +9,106 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+
+<!-- ===== STYLE TAMBAHAN: Color Swatches Cat Rambut ===== -->
+<style>
+  .hair-color-section {
+    margin: 10px 0 6px;
+  }
+  .hair-color-label {
+    font-size: 0.75em;
+    color: #aaa;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .hair-color-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .swatch-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+    font-size: 0.72em;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .swatch-btn:hover, .swatch-btn.active {
+    border-color: #FFD700;
+    background: rgba(255,215,0,0.12);
+    color: #FFD700;
+  }
+  .swatch-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+  .btn-try-hair {
+    width: 100%;
+    margin-top: 8px;
+    padding: 9px;
+    border-radius: 10px;
+    border: 1.5px solid #FFD700;
+    background: transparent;
+    color: #FFD700;
+    font-size: 0.82em;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .btn-try-hair:hover {
+    background: rgba(255,215,0,0.12);
+  }
+
+  /* Submenu cat rambut warna */
+  .hair-submenu-swatches {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 5px 0;
+  }
+  .hair-submenu-swatch-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1.5px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    color: #fff;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    text-align: left;
+  }
+  .hair-submenu-swatch-btn:hover {
+    border-color: #FFD700;
+    background: rgba(255,215,0,0.1);
+    color: #FFD700;
+  }
+  .hair-submenu-dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.25);
+  }
+</style>
 </head>
 <body>
 
@@ -34,8 +134,8 @@
       <p class="hero-sub" data-i18n="heroSub">AI Style Advisor · Smart Inventory · Business Intelligence</p>
       <div class="hero-stats">
         <div class="stat-pill"><span class="stat-dot"></span><span data-i18n="statLive">Live <b>AI</b> Active</span></div>
-        <div class="stat-pill">💎 <b id="total-koleksi">21</b> <span data-i18n="statCol">Koleksi</span></div>
-        <div class="stat-pill">📦 <b id="total-stok">210</b> <span data-i18n="statStock">Stok</span></div>
+        <div class="stat-pill">💎 <b id="total-koleksi">17</b> <span data-i18n="statCol">Koleksi</span></div>
+        <div class="stat-pill">📦 <b id="total-stok">170</b> <span data-i18n="statStock">Stok</span></div>
       </div>
     </div>
 
@@ -48,19 +148,20 @@
       </div>
     </div>
 
+    <!-- ===== CATEGORY FILTER: Wig → Cat Rambut ===== -->
     <div class="category-scroll" id="category-filters">
       <button class="cat-btn active" onclick="filterProducts('semua', this)" data-i18n="catAll">Semua Koleksi</button>
       <button class="cat-btn" onclick="filterProducts('pakaian', this)" data-i18n="catClothes">Pakaian</button>
       <button class="cat-btn" onclick="filterProducts('perhiasan', this)" data-i18n="catJewelry">Perhiasan Mewah</button>
       <button class="cat-btn" onclick="filterProducts('aksesoris', this)" data-i18n="catAcc">Aksesoris</button>
-      <button class="cat-btn" onclick="filterProducts('wig', this)">💇 Wig</button>
+      <button class="cat-btn" onclick="filterProducts('cat-rambut', this)">🎨 Cat Rambut</button>
       <button class="cat-btn" onclick="filterProducts('skincare', this)">✨ Skincare</button>
       <button class="cat-btn" onclick="filterProducts('makeup', this)">💄 Makeup</button>
     </div>
 
     <div class="section-header">
       <span class="section-title" data-i18n="secTitle">Koleksi Terpilih</span>
-      <span class="section-count" id="product-count">21 produk</span>
+      <span class="section-count" id="product-count">17 produk</span>
     </div>
 
     <div class="product-grid" id="products">
@@ -166,7 +267,6 @@
         </div>
       </div>
 
-      <!-- ===== TOPI — BUG FIX: hapus VTO, ganti jadi saran AI saja ===== -->
       <div class="product-card" data-name="topi streetwear" data-category="aksesoris" data-id="p6">
         <div class="product-img-wrap"><img src="topi-xx.jpg" alt="Topi xx" id="img-topi-xx"></div>
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Topi xx')">🤍</button>
@@ -207,106 +307,62 @@
         </div>
       </div>
 
-      <!-- ===== PRODUK WIG ===== -->
-      <div class="product-card" data-name="wig brown pendek" data-category="wig" data-id="p8">
-        <div class="product-img-wrap"><img src="wig-brown-pendek.jpg" alt="Wig Brown Pendek" id="img-wig-brown-pendek"></div>
-        <button class="wishlist-btn" onclick="toggleWishlist(this, 'Wig Brown Pendek')">🤍</button>
+      <!-- ===== PRODUK BARU: CAT RAMBUT PREMIUM ===== -->
+      <div class="product-card" data-name="cat rambut premium" data-category="cat-rambut" data-id="p8-new">
+        <div class="product-img-wrap">
+          <img src="cat-rambut-premium.jpg" alt="Cat Rambut Premium" id="img-cat-rambut">
+        </div>
+        <button class="wishlist-btn" onclick="toggleWishlist(this, 'Cat Rambut Premium')">🤍</button>
         <div class="product-body">
           <div class="product-meta">
-            <div><div class="product-name" data-i18n-prod="wigBrownName">Wig Brown Pendek</div><div class="product-sub">Bob Cut Natural Brown</div></div>
+            <div>
+              <div class="product-name">Cat Rambut Premium</div>
+              <div class="product-sub">AI Hair Color Try-On</div>
+            </div>
             <span class="stock-tag in" style="color:#FFD700;">🤖 AI: Tren Naik</span>
           </div>
-          <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">4.9 (34)</span></div>
-          <div class="product-price" data-price="280000"><span class="price-currency">Rp</span> <span class="price-val">280.000</span></div>
-          <div class="actions">
-            <div class="actions-row">
-              <button class="btn btn-ghost" onclick="tryWigYoucam('wig-brown-pendek.jpg', 'Wig Brown Pendek')">💇 Coba Wig</button>
-              <button class="btn btn-white" onclick="addToCart('Wig Brown Pendek', 280000)">+ Keranjang</button>
-            </div>
-            <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Wig Brown Pendek')">🤖 Minta Saran AI</button>
-          </div>
-        </div>
-      </div>
+          <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">5.0 (128)</span></div>
+          <div class="product-price" data-price="125000"><span class="price-currency">Rp</span> <span class="price-val">125.000</span></div>
 
-      <div class="product-card" data-name="wig gaya 12" data-category="wig" data-id="p9">
-        <div class="product-img-wrap"><img src="wig-gaya-12.jpg" alt="Wig Gaya 12" id="img-wig-gaya-12"></div>
-        <button class="wishlist-btn" onclick="toggleWishlist(this, 'Wig Gaya 12')">🤍</button>
-        <div class="product-body">
-          <div class="product-meta">
-            <div><div class="product-name" data-i18n-prod="wigGaya12Name">Wig Gaya 12</div><div class="product-sub">Style Series — Lurus Panjang</div></div>
-            <span class="stock-tag in">10 ada</span>
-          </div>
-          <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">5.0 (21)</span></div>
-          <div class="product-price" data-price="320000"><span class="price-currency">Rp</span> <span class="price-val">320.000</span></div>
-          <div class="actions">
-            <div class="actions-row">
-              <button class="btn btn-ghost" onclick="tryWigYoucam('wig-gaya-12.jpg', 'Wig Gaya 12')">💇 Coba Wig</button>
-              <button class="btn btn-white" onclick="addToCart('Wig Gaya 12', 320000)">+ Keranjang</button>
+          <!-- Pilihan Warna -->
+          <div class="hair-color-section">
+            <span class="hair-color-label">🎨 Pilih Warna — Preview dengan AI:</span>
+            <div class="hair-color-swatches" id="hair-swatches">
+              <button class="swatch-btn active" onclick="selectHairColor(this, 'Coklat', '#6B3A2A')">
+                <span class="swatch-dot" style="background:#6B3A2A;"></span> Coklat
+              </button>
+              <button class="swatch-btn" onclick="selectHairColor(this, 'Merah', '#C0392B')">
+                <span class="swatch-dot" style="background:#C0392B;"></span> Merah
+              </button>
+              <button class="swatch-btn" onclick="selectHairColor(this, 'Ungu', '#7D3C98')">
+                <span class="swatch-dot" style="background:#7D3C98;"></span> Ungu
+              </button>
+              <button class="swatch-btn" onclick="selectHairColor(this, 'Biru', '#1A5276')">
+                <span class="swatch-dot" style="background:#1A5276;"></span> Biru
+              </button>
+              <button class="swatch-btn" onclick="selectHairColor(this, 'Hitam', '#1a1a1a')">
+                <span class="swatch-dot" style="background:#1a1a1a; border-color:#555;"></span> Hitam
+              </button>
+              <button class="swatch-btn" onclick="selectHairColor(this, 'Pirang', '#D4AC0D')">
+                <span class="swatch-dot" style="background:#D4AC0D;"></span> Pirang
+              </button>
             </div>
-            <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Wig Gaya 12')">🤖 Minta Saran AI</button>
+            <!-- Tombol Try-On AI -->
+            <button class="btn-try-hair" onclick="openHairColor()" id="btn-hair-tryon">
+              💇 Coba Warna Rambut dengan AI
+            </button>
           </div>
-        </div>
-      </div>
 
-      <div class="product-card" data-name="wig ikal pelangi" data-category="wig" data-id="p10">
-        <div class="product-img-wrap"><img src="wig-ikal-pelangi.jpg" alt="Wig Ikal Pelangi" id="img-wig-ikal-pelangi"></div>
-        <button class="wishlist-btn" onclick="toggleWishlist(this, 'Wig Ikal Pelangi')">🤍</button>
-        <div class="product-body">
-          <div class="product-meta">
-            <div><div class="product-name" data-i18n-prod="wigIkalPelangiName">Wig Ikal Pelangi</div><div class="product-sub">Curly Rainbow Gradient</div></div>
-            <span class="stock-tag in" style="color:#FFD700;">🤖 AI: Tren Naik</span>
-          </div>
-          <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">5.0 (47)</span></div>
-          <div class="product-price" data-price="375000"><span class="price-currency">Rp</span> <span class="price-val">375.000</span></div>
           <div class="actions">
             <div class="actions-row">
-              <button class="btn btn-ghost" onclick="tryWigYoucam('wig-ikal-pelangi.jpg', 'Wig Ikal Pelangi')">💇 Coba Wig</button>
-              <button class="btn btn-white" onclick="addToCart('Wig Ikal Pelangi', 375000)">+ Keranjang</button>
+              <button class="btn btn-white" onclick="addToCart('Cat Rambut Premium', 125000)">+ Keranjang</button>
+              <button class="btn btn-ghost" onclick="askAIAbaoutProduct('Cat Rambut Premium')">🤖 Saran AI</button>
             </div>
-            <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Wig Ikal Pelangi')">🤖 Minta Saran AI</button>
+            <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Cat Rambut Premium')">🤖 Minta Saran AI</button>
           </div>
         </div>
       </div>
-
-      <div class="product-card" data-name="wig pendek pelangi" data-category="wig" data-id="p11">
-        <div class="product-img-wrap"><img src="wig-pendek-pelangi.jpg" alt="Wig Pendek Pelangi" id="img-wig-pendek-pelangi"></div>
-        <button class="wishlist-btn" onclick="toggleWishlist(this, 'Wig Pendek Pelangi')">🤍</button>
-        <div class="product-body">
-          <div class="product-meta">
-            <div><div class="product-name" data-i18n-prod="wigPendekPelangiName">Wig Pendek Pelangi</div><div class="product-sub">Pixie Cut Rainbow</div></div>
-            <span class="stock-tag in">10 ada</span>
-          </div>
-          <div class="product-rating"><span class="stars">★★★★☆</span> <span class="rating-count">4.6 (18)</span></div>
-          <div class="product-price" data-price="290000"><span class="price-currency">Rp</span> <span class="price-val">290.000</span></div>
-          <div class="actions">
-            <div class="actions-row">
-              <button class="btn btn-ghost" onclick="tryWigYoucam('wig-pendek-pelangi.jpg', 'Wig Pendek Pelangi')">💇 Coba Wig</button>
-              <button class="btn btn-white" onclick="addToCart('Wig Pendek Pelangi', 290000)">+ Keranjang</button>
-            </div>
-            <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Wig Pendek Pelangi')">🤖 Minta Saran AI</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="product-card" data-name="wig ikal 201" data-category="wig" data-id="p12">
-        <div class="product-img-wrap"><img src="wig-ikal-201.jpg" alt="Wig Ikal 201" id="img-wig-ikal-201"></div>
-        <button class="wishlist-btn" onclick="toggleWishlist(this, 'Wig Ikal 201')">🤍</button>
-        <div class="product-body">
-          <div class="product-meta">
-            <div><div class="product-name" data-i18n-prod="wigIkal201Name">Wig Ikal 201</div><div class="product-sub">Natural Curly Series</div></div>
-            <span class="stock-tag in" style="color:#ff4444;">🤖 AI: Sisa 3!</span>
-          </div>
-          <div class="product-rating"><span class="stars">★★★★★</span> <span class="rating-count">5.0 (63)</span></div>
-          <div class="product-price" data-price="310000"><span class="price-currency">Rp</span> <span class="price-val">310.000</span></div>
-          <div class="actions">
-            <div class="actions-row">
-              <button class="btn btn-ghost" onclick="tryWigYoucam('wig-ikal-201.jpg', 'Wig Ikal 201')">💇 Coba Wig</button>
-              <button class="btn btn-white" onclick="addToCart('Wig Ikal 201', 310000)">+ Keranjang</button>
-            </div>
-            <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Wig Ikal 201')">🤖 Minta Saran AI</button>
-          </div>
-        </div>
-      </div>
+      <!-- ===== END CAT RAMBUT PREMIUM ===== -->
 
       <!-- ===== SKINCARE ===== -->
       <div class="product-card" data-name="skincare jerawat" data-category="skincare" data-id="p13">
@@ -349,7 +405,7 @@
         </div>
       </div>
 
-      <!-- ===== MAKEUP LAMA ===== -->
+      <!-- ===== MAKEUP ===== -->
       <div class="product-card" data-name="lipstik merah 01" data-category="makeup" data-id="p15">
         <div class="product-img-wrap"><img src="lipstik-merah-01.jpg" alt="Lipstik Merah 01" id="img-lipstik-merah"></div>
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Lipstik Merah 01')">🤍</button>
@@ -410,9 +466,6 @@
         </div>
       </div>
 
-      <!-- ===== 4 PRODUK BARU ===== -->
-
-      <!-- PRODUK BARU 1: Lipstik Coklat Gold -->
       <div class="product-card" data-name="lipstik coklat gold" data-category="makeup" data-id="p18">
         <div class="product-img-wrap"><img src="lipstik-coklat-gold.jpg" alt="Lipstik Coklat Gold" id="img-lipstik-coklat-gold"></div>
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Lipstik Coklat Gold')">🤍</button>
@@ -433,7 +486,6 @@
         </div>
       </div>
 
-      <!-- PRODUK BARU 2: Eyeshadow Gold -->
       <div class="product-card" data-name="eyeshadow gold" data-category="makeup" data-id="p19">
         <div class="product-img-wrap"><img src="eyeshadow-gold.jpg" alt="Eyeshadow Gold" id="img-eyeshadow-gold"></div>
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Eyeshadow Gold')">🤍</button>
@@ -454,7 +506,6 @@
         </div>
       </div>
 
-      <!-- PRODUK BARU 3: Baju Kemeja Panjang -->
       <div class="product-card" data-name="baju kemeja panjang" data-category="pakaian" data-id="p20">
         <div class="product-img-wrap"><img src="kemeja-panjang.jpg" alt="Kemeja Panjang" id="img-kemeja-panjang"></div>
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Kemeja Panjang')">🤍</button>
@@ -475,7 +526,6 @@
         </div>
       </div>
 
-      <!-- PRODUK BARU 4: Baju Kaos Olahraga -->
       <div class="product-card" data-name="baju kaos olahraga" data-category="pakaian" data-id="p21">
         <div class="product-img-wrap"><img src="kaos-olahraga.jpg" alt="Kaos Olahraga" id="img-kaos-olahraga"></div>
         <button class="wishlist-btn" onclick="toggleWishlist(this, 'Kaos Olahraga')">🤍</button>
@@ -515,7 +565,8 @@
             </div>
             <div class="ai-quick-replies" id="ai-quick-replies">
                 <button class="ai-quick-btn" onclick="handleQuickReply('makeup')">💄 Rekomendasi Makeup</button>
-                <button class="ai-quick-btn" onclick="handleQuickReply('wig')">💇 Coba Gaya Rambut / Wig</button>
+                <!-- ===== UPDATED: Wig → Cat Rambut ===== -->
+                <button class="ai-quick-btn" onclick="handleQuickReply('cat-rambut')">🎨 Coba Warna Cat Rambut</button>
                 <button class="ai-quick-btn" onclick="handleQuickReply('fashion')">👗 Cari Pakaian &amp; Perhiasan</button>
                 <button class="ai-quick-btn" onclick="handleQuickReply('skinanalysis')">🔬 Analisis Kulit Saya</button>
                 <button class="ai-quick-btn" onclick="handleQuickReply('free')">💬 Tanya Bebas</button>
@@ -545,24 +596,33 @@
             <button class="submenu-back" onclick="closeSubmenu()">← Kembali</button>
         </div>
 
-        <!-- Sub-menu Wig -->
-        <div class="ai-submenu" id="submenu-wig" style="display:none;">
-            <p class="submenu-label">Pilih gaya wig yang ingin dicoba:</p>
-            <div class="submenu-scroll">
-                <button class="submenu-item" onclick="tryWigYoucam('wig-brown-pendek.jpg','Wig Brown Pendek')">
-                    <img src="wig-brown-pendek.jpg" alt="Wig Brown"><span>Brown Pendek</span>
+        <!-- ===== UPDATED: Sub-menu Cat Rambut (ganti submenu-wig) ===== -->
+        <div class="ai-submenu" id="submenu-cat-rambut" style="display:none;">
+            <p class="submenu-label">🎨 Pilih warna cat rambut — preview dengan AI YouCam:</p>
+            <div class="hair-submenu-swatches">
+                <button class="hair-submenu-swatch-btn" onclick="openHairColorFromSubmenu('Coklat', '#6B3A2A')">
+                    <span class="hair-submenu-dot" style="background:#6B3A2A;"></span>
+                    <div><b>Coklat</b><br><small style="color:#aaa;">Natural Brown — Elegan & Hangat</small></div>
                 </button>
-                <button class="submenu-item" onclick="tryWigYoucam('wig-gaya-12.jpg','Wig Gaya 12')">
-                    <img src="wig-gaya-12.jpg" alt="Wig Gaya 12"><span>Gaya 12</span>
+                <button class="hair-submenu-swatch-btn" onclick="openHairColorFromSubmenu('Merah', '#C0392B')">
+                    <span class="hair-submenu-dot" style="background:#C0392B;"></span>
+                    <div><b>Merah</b><br><small style="color:#aaa;">Bold Red — Berani & Memukau</small></div>
                 </button>
-                <button class="submenu-item" onclick="tryWigYoucam('wig-ikal-pelangi.jpg','Wig Ikal Pelangi')">
-                    <img src="wig-ikal-pelangi.jpg" alt="Wig Ikal Pelangi"><span>Ikal Pelangi</span>
+                <button class="hair-submenu-swatch-btn" onclick="openHairColorFromSubmenu('Ungu', '#7D3C98')">
+                    <span class="hair-submenu-dot" style="background:#7D3C98;"></span>
+                    <div><b>Ungu</b><br><small style="color:#aaa;">Royal Purple — Unik & Stylish</small></div>
                 </button>
-                <button class="submenu-item" onclick="tryWigYoucam('wig-pendek-pelangi.jpg','Wig Pendek Pelangi')">
-                    <img src="wig-pendek-pelangi.jpg" alt="Wig Pendek Pelangi"><span>Pendek Pelangi</span>
+                <button class="hair-submenu-swatch-btn" onclick="openHairColorFromSubmenu('Biru', '#1A5276')">
+                    <span class="hair-submenu-dot" style="background:#1A5276;"></span>
+                    <div><b>Biru</b><br><small style="color:#aaa;">Deep Blue — Modern & Edgy</small></div>
                 </button>
-                <button class="submenu-item" onclick="tryWigYoucam('wig-ikal-201.jpg','Wig Ikal 201')">
-                    <img src="wig-ikal-201.jpg" alt="Wig Ikal 201"><span>Ikal 201</span>
+                <button class="hair-submenu-swatch-btn" onclick="openHairColorFromSubmenu('Hitam', '#1a1a1a')">
+                    <span class="hair-submenu-dot" style="background:#1a1a1a; border-color:#555;"></span>
+                    <div><b>Hitam</b><br><small style="color:#aaa;">Jet Black — Klasik & Timeless</small></div>
+                </button>
+                <button class="hair-submenu-swatch-btn" onclick="openHairColorFromSubmenu('Pirang', '#D4AC0D')">
+                    <span class="hair-submenu-dot" style="background:#D4AC0D;"></span>
+                    <div><b>Pirang</b><br><small style="color:#aaa;">Golden Blonde — Cerah & Segar</small></div>
                 </button>
             </div>
             <button class="submenu-back" onclick="closeSubmenu()">← Kembali</button>
@@ -624,5 +684,37 @@
 <div id="admin-modal" class="modal"><div class="modal-sheet glass-panel"><button class="modal-close" onclick="closeModal('admin-modal')">✕</button><p class="modal-title">Business Dashboard</p><div class="dash-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;"><div class="dash-kpi" style="background: linear-gradient(145deg, rgba(26,26,26,0.8), rgba(13,13,13,0.9)); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);"><div class="dash-kpi-label" style="font-size:0.8em; color:#aaa;">Pendapatan Est.</div><div class="dash-kpi-value gold" id="dash-revenue" style="color: #FFD700; font-size: 1.2em; font-weight:bold; margin-top:5px;">Rp 0</div></div><div class="dash-kpi" style="background: linear-gradient(145deg, rgba(26,26,26,0.8), rgba(13,13,13,0.9)); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);"><div class="dash-kpi-label" style="font-size:0.8em; color:#aaa;">Wishlist</div><div class="dash-kpi-value" id="dash-wishlist-count" style="font-size: 1.5em; font-weight:bold; margin-top:5px;">0</div></div></div><div class="mini-chart" id="mini-chart" style="display: flex; height: 100px; align-items: flex-end; gap: 5px; margin-top: 20px;"></div></div></div>
 
 <script src="script.js?v=2025050103"></script>
+
+<!-- ===== SCRIPT TAMBAHAN: Swatch & Hair Color Handler ===== -->
+<script>
+  // Simpan warna yang dipilih user di kartu produk
+  let selectedHairColor = { name: 'Coklat', hex: '#6B3A2A' };
+
+  function selectHairColor(btn, colorName, colorHex) {
+    // Reset semua swatch di kartu produk
+    document.querySelectorAll('#hair-swatches .swatch-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedHairColor = { name: colorName, hex: colorHex };
+    // Update label tombol try-on
+    const tryBtn = document.getElementById('btn-hair-tryon');
+    if (tryBtn) tryBtn.innerHTML = `💇 Coba Warna <b>${colorName}</b> dengan AI`;
+  }
+
+  function openHairColor() {
+    // Panggil fungsi di script.js dengan warna yang dipilih
+    if (typeof openHairColorYoucam === 'function') {
+      openHairColorYoucam(selectedHairColor.name, selectedHairColor.hex);
+    } else {
+      console.warn('openHairColorYoucam() belum didefinisikan di script.js');
+      alert(`[Demo] Membuka AI YouCam Hair Color\nWarna dipilih: ${selectedHairColor.name}\nSilakan implementasi openHairColorYoucam() di script.js`);
+    }
+  }
+
+  function openHairColorFromSubmenu(colorName, colorHex) {
+    selectedHairColor = { name: colorName, hex: colorHex };
+    closeSubmenu();
+    openHairColor();
+  }
+</script>
 </body>
 </html>
