@@ -1,11 +1,35 @@
-// api/youcam.js — Vercel Serverless Function v8 (FINAL)
+// api/youcam.js — Vercel Serverless Function v9 (BUGFIX)
 // Produk: AI Clothes V3, AI Necklace VTO, AI Makeup VTO,
 //         AI Hair Color, AI Hairstyle V2.1, Skin Analysis V2.1, AI Look VTO
+//
+// BugFix v9:
+//   [1] ai-makeup: tambah case 'blush' — sebelumnya semua non-eye
+//       langsung jadi lip_color, termasuk blush → ini penyebab
+//       blush hasilnya lipstik merah!
+//   [2] ai-makeup: baca field "category" dari body (bukan hanya "zone")
+//       + baca "effect" object lengkap dari frontend jika ada
+//   [3] ai-hair-color: baca field "palettes" & "preset" dari frontend
+//       agar tidak null pattern
+//   [4] ai-hairstyle: mapping style name → template_id yang valid
+//       sebelumnya frontend kirim "natural/curly/etc" tapi backend
+//       butuh template_id → hasilnya error karena keduanya null
 
 const BASE_URL = 'https://yce-api-01.makeupar.com';
 
 export const config = {
   api: { bodyParser: { sizeLimit: '10mb' } },
+};
+
+// ── Mapping hairstyle name → template_id YouCam ──────────────
+// Template ID ini dari katalog YouCam Hairstyle V2.1
+// Sesuaikan jika kamu punya template_id spesifik dari akun kamu
+const HAIRSTYLE_TEMPLATE_MAP = {
+  natural:  'natural_01',
+  curly:    'curly_01',
+  straight: 'straight_01',
+  wavy:     'wavy_01',
+  bob:      'bob_01',
+  pixie:    'pixie_01',
 };
 
 export default async function handler(req, res) {
@@ -33,7 +57,7 @@ export default async function handler(req, res) {
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-  // Ekstrak URL hasil dari berbagai format response YouCam
+  // ── Ekstrak URL hasil dari berbagai format response YouCam ─
   function extractResultUrl(result) {
     return (
       result?.data?.results?.url       ||
@@ -50,7 +74,7 @@ export default async function handler(req, res) {
     );
   }
 
-  // Polling sampai task selesai
+  // ── Polling sampai task selesai ───────────────────────────
   async function pollTask(taskId, pollEndpoint, maxRetry = 40, intervalMs = 2000) {
     for (let i = 0; i < maxRetry; i++) {
       await sleep(intervalMs);
@@ -77,7 +101,7 @@ export default async function handler(req, res) {
     throw new Error('Timeout: AI tidak selesai dalam waktu yang ditentukan.');
   }
 
-  // Helper umum: POST task → poll → return result
+  // ── Helper umum: POST task → poll → return result ─────────
   async function runTask(endpoint, payload) {
     let startRes, rawText, startData;
     try {
@@ -122,17 +146,18 @@ export default async function handler(req, res) {
     return { success: true, result_url: resultUrl, raw: result };
   }
 
-  // ══════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════
   try {
 
     // ── 1. Skin Analysis V2.1 ───────────────────────────────
-    // dst_actions SD: acne, moisture, pore, wrinkle, radiance, redness, oiliness, dll
-    // JANGAN campur HD (hd_acne, dll) dan SD dalam satu request
     if (action === 'skin-analysis') {
       const { user_image_url, dst_actions } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
 
-      const actions = dst_actions || ['acne', 'moisture', 'pore', 'wrinkle', 'radiance', 'redness', 'oiliness', 'texture'];
+      const actions = dst_actions || [
+        'acne', 'moisture', 'pore', 'wrinkle',
+        'radiance', 'redness', 'oiliness', 'texture',
+      ];
 
       let startRes, rawText, startData;
       try {
@@ -154,7 +179,10 @@ export default async function handler(req, res) {
       }
 
       if (!startRes.ok)
-        return res.status(startRes.status).json({ error: startData?.message || startData?.error || 'Gagal memulai Skin Analysis', detail: startData });
+        return res.status(startRes.status).json({
+          error: startData?.message || startData?.error || 'Gagal memulai Skin Analysis',
+          detail: startData,
+        });
 
       const taskId = startData?.data?.task_id || startData?.task_id;
       if (!taskId) return res.status(500).json({ error: 'Tidak dapat task_id', detail: startData });
@@ -167,7 +195,6 @@ export default async function handler(req, res) {
     }
 
     // ── 2. AI Clothes V3.0 ──────────────────────────────────
-    // garment_category: 'upper_body' | 'lower_body' | 'full_body' | 'auto'
     if (action === 'ai-clothes') {
       const { user_image_url, cloth_image_url, garment_category } = body;
       if (!user_image_url)  return res.status(400).json({ error: 'user_image_url diperlukan' });
@@ -183,7 +210,6 @@ export default async function handler(req, res) {
     }
 
     // ── 3. AI Necklace VTO ──────────────────────────────────
-    // ref_file_urls harus array sesuai docs
     if (action === 'ai-necklace') {
       const { user_image_url, necklace_image_url } = body;
       if (!user_image_url)     return res.status(400).json({ error: 'user_image_url diperlukan' });
@@ -191,7 +217,7 @@ export default async function handler(req, res) {
 
       const out = await runTask('/s2s/v2.0/task/2d-vto/necklace', {
         src_file_url: user_image_url,
-        ref_file_urls: [necklace_image_url],   // ← array, bukan string tunggal
+        ref_file_urls: [necklace_image_url],
         necklace_shadow_intensity: 0.15,
         necklace_ambient_light_intensity: 1.0,
       });
@@ -200,44 +226,93 @@ export default async function handler(req, res) {
     }
 
     // ── 4. AI Makeup VTO ────────────────────────────────────
-    // zone: 'lip' → lip_color | 'eye' → eye_shadow
-    // eye_shadow & lip_color WAJIB ada field pattern
+    // [FIXED v9] Sebelumnya: hanya ada 2 kondisi (eye vs lip)
+    //            → blush tidak ada kasusnya → jatuh ke lip_color → lipstik! 😂
+    // Sekarang: baca "category" dari frontend + handle semua kategori
+    //           + terima "effect" object langsung jika frontend sudah siapkan
     if (action === 'ai-makeup') {
-      const { user_image_url, zone, color, pattern } = body;
+      const { user_image_url, zone, category, color, effect: frontendEffect } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
-      if (!color)          return res.status(400).json({ error: 'color (hex) diperlukan' });
 
-      const isEye = zone === 'eye' || zone === 'eyes';
+      // Prioritas: baca "category" dulu, fallback ke "zone" (backward compatible)
+      const cat = (category || zone || 'lip_color').toLowerCase();
 
-      const effect = isEye
-        ? {
-            // Eye Shadow — pattern wajib ada, default: 1color1
-            category: 'eye_shadow',
-            pattern: { name: pattern || '1color1' },
+      // Jika frontend sudah kirim effect object lengkap, pakai langsung
+      // Ini cara paling aman — frontend yang tahu pattern/shape yang benar
+      let effectObject;
+
+      if (frontendEffect && frontendEffect.category) {
+        // ✅ Pakai effect dari frontend langsung (script.js v4 sudah kirim ini)
+        effectObject = frontendEffect;
+        console.log('[makeup] Pakai effect dari frontend:', JSON.stringify(effectObject));
+      } else {
+        // Fallback: bangun effect di backend berdasarkan category
+        // [FIXED] Tambah case 'blush' — sebelumnya tidak ada!
+        const col = color || '#E8A0A0';
+
+        if (cat === 'blush') {
+          // ✅ FIXED: blush sekarang punya kasusnya sendiri
+          effectObject = {
+            category: 'blush',
+            pattern: { name: '1color1' },   // valid dari blush.json
             palettes: [{
-              color: color,
+              color: col,
+              texture: 'matte',
+              colorIntensity: 65,
+            }],
+          };
+        } else if (cat === 'eye_shadow' || cat === 'eye' || cat === 'eyes') {
+          effectObject = {
+            category: 'eye_shadow',
+            pattern: { name: '1color1' },   // valid dari eyeshadow.json
+            palettes: [{
+              color: col,
               texture: 'shimmer',
-              shimmerColor: color,
+              shimmerColor: col,
               shimmerIntensity: 50,
               colorIntensity: 50,
             }],
-          }
-        : {
-            // Lip Color — shape wajib ada
-            category: 'lip_color',
-            shape: { name: 'original' },
-            style: { type: 'full' },
-            morphology: { fullness: 0, wrinkless: 0 },
+          };
+        } else if (cat === 'eye_liner' || cat === 'liner') {
+          effectObject = {
+            category: 'eye_liner',
+            pattern: { name: 'Arabic3' },   // valid dari eyeliner.json
             palettes: [{
-              color: color,
+              color: col,
               texture: 'matte',
+              colorIntensity: 90,
+            }],
+          };
+        } else if (cat === 'bronzer') {
+          effectObject = {
+            category: 'bronzer',
+            pattern: { name: 'Bronzer1' },  // valid dari bronzer.json
+            palettes: [{
+              color: col,
               colorIntensity: 50,
             }],
           };
+        } else {
+          // Default: lip_color (untuk 'lip', 'lips', 'lip_color', dll)
+          effectObject = {
+            category: 'lip_color',
+            shape: { name: 'original' },    // valid dari lipshape.json
+            style: { type: 'full' },
+            morphology: { fullness: 0, wrinkless: 0 },
+            palettes: [{
+              color: col,
+              texture: 'matte',
+              colorIntensity: 80,
+            }],
+          };
+        }
+
+        console.log('[makeup] Bangun effect di backend untuk category:', cat);
+      }
 
       const out = await runTask('/s2s/v2.0/task/makeup-vto', {
         src_file_url: user_image_url,
-        effects: [effect],
+        effects: [effectObject],
         version: '1.0',
       });
       if (!out.success) return res.status(out.status || 500).json({ error: out.error, detail: out.detail });
@@ -245,37 +320,71 @@ export default async function handler(req, res) {
     }
 
     // ── 5. AI Hair Color ────────────────────────────────────
-    // Endpoint terpisah dari makeup-vto
-    // Kirim palette dengan warna hex
+    // [FIXED v9] Sebelumnya: hanya baca body.color
+    //            Sekarang: baca preset & palettes dari frontend juga
+    //            Frontend v4 kirim: { color, color_name, preset, palettes }
     if (action === 'ai-hair-color') {
-      const { user_image_url, color, color_name } = body;
+      const { user_image_url, color, color_name, preset, palettes } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
-      if (!color)          return res.status(400).json({ error: 'color (hex) diperlukan' });
 
-      const out = await runTask('/s2s/v2.0/task/hair-color', {
-        src_file_url: user_image_url,
-        palettes: [{
+      // Bangun payload YouCam Hair Color API
+      // Jika ada preset → pakai preset (prioritas sesuai docs YouCam)
+      // Jika tidak ada preset → pakai palettes dengan hex color
+      let hairPayload = { src_file_url: user_image_url };
+
+      if (preset) {
+        // Preset prioritas — docs YouCam: jika preset + palettes, preset menang
+        hairPayload.preset = preset;
+        console.log('[hair-color] Pakai preset:', preset);
+      }
+
+      // Selalu sertakan palettes sebagai fallback / untuk warna custom
+      if (palettes && Array.isArray(palettes) && palettes.length > 0) {
+        hairPayload.palettes = palettes;
+        console.log('[hair-color] Pakai palettes dari frontend:', JSON.stringify(palettes));
+      } else if (color) {
+        // Fallback: bangun palettes dari color hex
+        hairPayload.palettes = [{
           color: color,
-          colorIntensity: 70,
-        }],
-      });
+          colorIntensity: 75,
+        }];
+        console.log('[hair-color] Bangun palettes dari color:', color);
+      } else if (!preset) {
+        // Tidak ada preset maupun color — error
+        return res.status(400).json({ error: 'color (hex), preset, atau palettes diperlukan' });
+      }
+
+      const out = await runTask('/s2s/v2.0/task/hair-color', hairPayload);
       if (!out.success) return res.status(out.status || 500).json({ error: out.error, detail: out.detail });
       return res.status(200).json({ result_url: out.result_url, color_name: color_name || '', ...out.raw });
     }
 
     // ── 6. AI Hairstyle V2.1 ────────────────────────────────
-    // Pakai endpoint terbaru v2.1/task/hair-transfer
-    // Bisa pakai template_id ATAU ref_file_url (foto referensi gaya rambut)
+    // [FIXED v9] Sebelumnya: frontend kirim "style" (e.g. "natural")
+    //            tapi backend langsung pakai sebagai template_id → error!
+    //            Sekarang: mapping style name → template_id yang valid
     if (action === 'ai-hairstyle') {
-      const { user_image_url, template_id, ref_image_url } = body;
+      const { user_image_url, style, template_id, ref_image_url } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
-      if (!template_id && !ref_image_url)
-        return res.status(400).json({ error: 'template_id atau ref_image_url diperlukan' });
+
+      // [FIX] Mapping style name → template_id jika template_id tidak dikirim langsung
+      let finalTemplateId = template_id;
+      if (!finalTemplateId && style) {
+        finalTemplateId = HAIRSTYLE_TEMPLATE_MAP[style.toLowerCase()] || HAIRSTYLE_TEMPLATE_MAP['natural'];
+        console.log(`[hairstyle] Mapping style "${style}" → template_id "${finalTemplateId}"`);
+      }
+
+      if (!finalTemplateId && !ref_image_url) {
+        return res.status(400).json({
+          error: 'template_id, ref_image_url, atau style diperlukan',
+          available_styles: Object.keys(HAIRSTYLE_TEMPLATE_MAP),
+        });
+      }
 
       const payload = {
         src_file_url: user_image_url,
-        ...(template_id   ? { template_id }              : {}),
-        ...(ref_image_url ? { ref_file_url: ref_image_url } : {}),
+        ...(finalTemplateId ? { template_id: finalTemplateId } : {}),
+        ...(ref_image_url   ? { ref_file_url: ref_image_url }  : {}),
       };
 
       const out = await runTask('/s2s/v2.1/task/hair-transfer', payload);
@@ -284,7 +393,6 @@ export default async function handler(req, res) {
     }
 
     // ── 7. AI Look VTO ──────────────────────────────────────
-    // template_id didapat dari GET /s2s/v2.0/task/template/look-vto
     if (action === 'ai-look') {
       const { user_image_url, template_id } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
