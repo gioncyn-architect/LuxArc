@@ -1225,6 +1225,19 @@ nav {
 }
 
 .actions-row .btn {
+  
   width: 100%;
   font-size: 0.75rem;
+}
+.actions-row {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+}
+
+.actions-row .btn {
+  flex: 1;
+  font-size: 0.68rem;
+  padding: 7px 5px;
+  white-space: nowrap;
 }
