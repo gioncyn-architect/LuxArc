@@ -1,18 +1,9 @@
-// api/youcam.js — Vercel Serverless Function v9 (BUGFIX)
-// Produk: AI Clothes V3, AI Necklace VTO, AI Makeup VTO,
-//         AI Hair Color, AI Hairstyle V2.1, Skin Analysis V2.1, AI Look VTO
-//
-// BugFix v9:
-//   [1] ai-makeup: tambah case 'blush' — sebelumnya semua non-eye
-//       langsung jadi lip_color, termasuk blush → ini penyebab
-//       blush hasilnya lipstik merah!
-//   [2] ai-makeup: baca field "category" dari body (bukan hanya "zone")
-//       + baca "effect" object lengkap dari frontend jika ada
-//   [3] ai-hair-color: baca field "palettes" & "preset" dari frontend
-//       agar tidak null pattern
-//   [4] ai-hairstyle: mapping style name → template_id yang valid
-//       sebelumnya frontend kirim "natural/curly/etc" tapi backend
-//       butuh template_id → hasilnya error karena keduanya null
+// api/youcam.js — Vercel Serverless Function v10 (BUGFIX)
+// BugFix v10:
+//   [1] ai-hair-color: tambah field "pattern" di setiap palette
+//       → YouCam Hair Color API wajib ada pattern, kalau null → error "null pattern"
+//   [2] skin-analysis / runAutoDetectAnalysis: tambah guard undefined
+//       → jika scores tidak ada / struktur berbeda → tidak crash dengan "undefined"
 
 const BASE_URL = 'https://yce-api-01.makeupar.com';
 
@@ -20,9 +11,6 @@ export const config = {
   api: { bodyParser: { sizeLimit: '10mb' } },
 };
 
-// ── Mapping hairstyle name → template_id YouCam ──────────────
-// Template ID ini dari katalog YouCam Hairstyle V2.1
-// Sesuaikan jika kamu punya template_id spesifik dari akun kamu
 const HAIRSTYLE_TEMPLATE_MAP = {
   natural:  'natural_01',
   curly:    'curly_01',
@@ -33,13 +21,11 @@ const HAIRSTYLE_TEMPLATE_MAP = {
 };
 
 export default async function handler(req, res) {
-  // ── CORS ──────────────────────────────────────────────────
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // ── API Key ───────────────────────────────────────────────
   const apiKey = process.env.YOUCAM_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'API key tidak ditemukan di environment' });
 
@@ -57,7 +43,6 @@ export default async function handler(req, res) {
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-  // ── Ekstrak URL hasil dari berbagai format response YouCam ─
   function extractResultUrl(result) {
     return (
       result?.data?.results?.url       ||
@@ -74,7 +59,6 @@ export default async function handler(req, res) {
     );
   }
 
-  // ── Polling sampai task selesai ───────────────────────────
   async function pollTask(taskId, pollEndpoint, maxRetry = 40, intervalMs = 2000) {
     for (let i = 0; i < maxRetry; i++) {
       await sleep(intervalMs);
@@ -94,14 +78,12 @@ export default async function handler(req, res) {
       if (['error', 'failed', 'fail'].includes(status))
         throw new Error('Tugas AI gagal: ' + JSON.stringify(d));
 
-      // Beberapa endpoint langsung return URL tanpa status "success"
       const url = extractResultUrl(d);
       if (url) return d;
     }
     throw new Error('Timeout: AI tidak selesai dalam waktu yang ditentukan.');
   }
 
-  // ── Helper umum: POST task → poll → return result ─────────
   async function runTask(endpoint, payload) {
     let startRes, rawText, startData;
     try {
@@ -146,7 +128,6 @@ export default async function handler(req, res) {
     return { success: true, result_url: resultUrl, raw: result };
   }
 
-  // ════════════════════════════════════════════════════════════
   try {
 
     // ── 1. Skin Analysis V2.1 ───────────────────────────────
@@ -191,6 +172,12 @@ export default async function handler(req, res) {
       try { result = await pollTask(taskId, '/s2s/v2.1/task/skin-analysis'); }
       catch (e) { return res.status(500).json({ error: e.message }); }
 
+      // [FIX v10] Pastikan result ada sebelum return
+      // Jika result null/undefined → return error yang jelas, bukan "undefined"
+      if (!result) {
+        return res.status(500).json({ error: 'Skin analysis selesai tapi result kosong (undefined)' });
+      }
+
       return res.status(200).json(result);
     }
 
@@ -226,87 +213,53 @@ export default async function handler(req, res) {
     }
 
     // ── 4. AI Makeup VTO ────────────────────────────────────
-    // [FIXED v9] Sebelumnya: hanya ada 2 kondisi (eye vs lip)
-    //            → blush tidak ada kasusnya → jatuh ke lip_color → lipstik! 😂
-    // Sekarang: baca "category" dari frontend + handle semua kategori
-    //           + terima "effect" object langsung jika frontend sudah siapkan
     if (action === 'ai-makeup') {
       const { user_image_url, zone, category, color, effect: frontendEffect } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
 
-      // Prioritas: baca "category" dulu, fallback ke "zone" (backward compatible)
       const cat = (category || zone || 'lip_color').toLowerCase();
 
-      // Jika frontend sudah kirim effect object lengkap, pakai langsung
-      // Ini cara paling aman — frontend yang tahu pattern/shape yang benar
       let effectObject;
 
       if (frontendEffect && frontendEffect.category) {
-        // ✅ Pakai effect dari frontend langsung (script.js v4 sudah kirim ini)
         effectObject = frontendEffect;
         console.log('[makeup] Pakai effect dari frontend:', JSON.stringify(effectObject));
       } else {
-        // Fallback: bangun effect di backend berdasarkan category
-        // [FIXED] Tambah case 'blush' — sebelumnya tidak ada!
         const col = color || '#E8A0A0';
 
         if (cat === 'blush') {
-          // ✅ FIXED: blush sekarang punya kasusnya sendiri
           effectObject = {
             category: 'blush',
-            pattern: { name: '1color1' },   // valid dari blush.json
-            palettes: [{
-              color: col,
-              texture: 'matte',
-              colorIntensity: 65,
-            }],
+            pattern: { name: '1color1' },
+            palettes: [{ color: col, texture: 'matte', colorIntensity: 65 }],
           };
         } else if (cat === 'eye_shadow' || cat === 'eye' || cat === 'eyes') {
           effectObject = {
             category: 'eye_shadow',
-            pattern: { name: '1color1' },   // valid dari eyeshadow.json
-            palettes: [{
-              color: col,
-              texture: 'shimmer',
-              shimmerColor: col,
-              shimmerIntensity: 50,
-              colorIntensity: 50,
-            }],
+            pattern: { name: '1color1' },
+            palettes: [{ color: col, texture: 'shimmer', shimmerColor: col, shimmerIntensity: 50, colorIntensity: 50 }],
           };
         } else if (cat === 'eye_liner' || cat === 'liner') {
           effectObject = {
             category: 'eye_liner',
-            pattern: { name: 'Arabic3' },   // valid dari eyeliner.json
-            palettes: [{
-              color: col,
-              texture: 'matte',
-              colorIntensity: 90,
-            }],
+            pattern: { name: 'Arabic3' },
+            palettes: [{ color: col, texture: 'matte', colorIntensity: 90 }],
           };
         } else if (cat === 'bronzer') {
           effectObject = {
             category: 'bronzer',
-            pattern: { name: 'Bronzer1' },  // valid dari bronzer.json
-            palettes: [{
-              color: col,
-              colorIntensity: 50,
-            }],
+            pattern: { name: 'Bronzer1' },
+            palettes: [{ color: col, colorIntensity: 50 }],
           };
         } else {
-          // Default: lip_color (untuk 'lip', 'lips', 'lip_color', dll)
           effectObject = {
             category: 'lip_color',
-            shape: { name: 'original' },    // valid dari lipshape.json
+            shape: { name: 'original' },
             style: { type: 'full' },
             morphology: { fullness: 0, wrinkless: 0 },
-            palettes: [{
-              color: col,
-              texture: 'matte',
-              colorIntensity: 80,
-            }],
+            palettes: [{ color: col, texture: 'matte', colorIntensity: 80 }],
           };
         }
-
         console.log('[makeup] Bangun effect di backend untuk category:', cat);
       }
 
@@ -320,37 +273,38 @@ export default async function handler(req, res) {
     }
 
     // ── 5. AI Hair Color ────────────────────────────────────
-    // [FIXED v9] Sebelumnya: hanya baca body.color
-    //            Sekarang: baca preset & palettes dari frontend juga
-    //            Frontend v4 kirim: { color, color_name, preset, palettes }
+    // [FIXED v10] Tambah field "pattern" di setiap palette
+    // YouCam Hair Color API wajib ada pattern → kalau null/tidak ada → error "null pattern"
     if (action === 'ai-hair-color') {
       const { user_image_url, color, color_name, preset, palettes } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
 
-      // Bangun payload YouCam Hair Color API
-      // Jika ada preset → pakai preset (prioritas sesuai docs YouCam)
-      // Jika tidak ada preset → pakai palettes dengan hex color
       let hairPayload = { src_file_url: user_image_url };
 
+      // Preset tidak dipakai lagi di frontend v5 (dihapus karena enum strict)
+      // Tapi tetap support jika suatu saat dikirim lagi
       if (preset) {
-        // Preset prioritas — docs YouCam: jika preset + palettes, preset menang
         hairPayload.preset = preset;
         console.log('[hair-color] Pakai preset:', preset);
       }
 
-      // Selalu sertakan palettes sebagai fallback / untuk warna custom
       if (palettes && Array.isArray(palettes) && palettes.length > 0) {
-        hairPayload.palettes = palettes;
-        console.log('[hair-color] Pakai palettes dari frontend:', JSON.stringify(palettes));
+        // [FIX v10] Inject "pattern" ke setiap palette jika belum ada
+        // YouCam butuh pattern.name yang valid, default: "full" (seluruh rambut)
+        hairPayload.palettes = palettes.map(p => ({
+          ...p,
+          pattern: p.pattern || { name: 'full' },
+        }));
+        console.log('[hair-color] Palettes (fixed):', JSON.stringify(hairPayload.palettes));
       } else if (color) {
-        // Fallback: bangun palettes dari color hex
+        // Fallback dari color hex saja
         hairPayload.palettes = [{
           color: color,
           colorIntensity: 75,
+          pattern: { name: 'full' }, // [FIX v10] wajib ada
         }];
         console.log('[hair-color] Bangun palettes dari color:', color);
       } else if (!preset) {
-        // Tidak ada preset maupun color — error
         return res.status(400).json({ error: 'color (hex), preset, atau palettes diperlukan' });
       }
 
@@ -360,14 +314,10 @@ export default async function handler(req, res) {
     }
 
     // ── 6. AI Hairstyle V2.1 ────────────────────────────────
-    // [FIXED v9] Sebelumnya: frontend kirim "style" (e.g. "natural")
-    //            tapi backend langsung pakai sebagai template_id → error!
-    //            Sekarang: mapping style name → template_id yang valid
     if (action === 'ai-hairstyle') {
       const { user_image_url, style, template_id, ref_image_url } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
 
-      // [FIX] Mapping style name → template_id jika template_id tidak dikirim langsung
       let finalTemplateId = template_id;
       if (!finalTemplateId && style) {
         finalTemplateId = HAIRSTYLE_TEMPLATE_MAP[style.toLowerCase()] || HAIRSTYLE_TEMPLATE_MAP['natural'];
@@ -406,17 +356,11 @@ export default async function handler(req, res) {
       return res.status(200).json({ result_url: out.result_url, ...out.raw });
     }
 
-    // ── Action tidak dikenal ─────────────────────────────────
     return res.status(400).json({
       error: `Action tidak dikenal: "${action}"`,
       available_actions: [
-        'skin-analysis',
-        'ai-clothes',
-        'ai-necklace',
-        'ai-makeup',
-        'ai-hair-color',
-        'ai-hairstyle',
-        'ai-look',
+        'skin-analysis', 'ai-clothes', 'ai-necklace',
+        'ai-makeup', 'ai-hair-color', 'ai-hairstyle', 'ai-look',
       ],
     });
 
