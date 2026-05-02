@@ -1,4 +1,4 @@
-const CACHE_NAME = 'luxarc-v2'; // Versi dinaikkan untuk memastikan update
+const CACHE_NAME = 'luxarc-v3'; // Versi dinaikkan untuk memastikan update
 const urlsToCache = [
   './index.html',
   './style.css',
