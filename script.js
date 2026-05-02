@@ -1,8 +1,10 @@
 // ============================================================
-// LuxArc AI — script.js COMPLETE v2
+// LuxArc AI — script.js COMPLETE v3 (PATCHED)
 // Terhubung ke: /api/youcam (Vercel Serverless)
 // Fitur: AI Clothes, Hair Color, Makeup, Skin Analysis,
 //        Hairstyle, Accessory, Photo Enhancer
+// Patch: resizeImage, uploadToImgBB, runAIHairColor,
+//        runAIMakeup, runAIAccessory (ai-necklace)
 // ============================================================
 
 const IMGBB_API_KEY = 'f38d35d294b0887931317043aa4ce731';
@@ -14,10 +16,34 @@ function formatRupiah(number) {
     return new Intl.NumberFormat('id-ID').format(num);
 }
 
-// ── Upload foto ke ImgBB → dapat URL publik ──────────────────
+// ── [BARU] Resize gambar sebelum upload (max 1800px) ─────────
+function resizeImage(base64, maxSize = 1800) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            let { width, height } = img;
+            if (width <= maxSize && height <= maxSize) {
+                resolve(base64);
+                return;
+            }
+            const ratio = Math.min(maxSize / width, maxSize / height);
+            width  = Math.round(width  * ratio);
+            height = Math.round(height * ratio);
+            const canvas = document.createElement('canvas');
+            canvas.width  = width;
+            canvas.height = height;
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.92));
+        };
+        img.src = base64;
+    });
+}
+
+// ── [PATCHED] Upload foto ke ImgBB — resize dulu ─────────────
 async function uploadToImgBB(base64) {
+    const resized = await resizeImage(base64, 1800);
     const formData = new FormData();
-    formData.append('image', base64.split(',')[1]);
+    formData.append('image', resized.split(',')[1]);
     const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
         method: 'POST', body: formData
     });
@@ -175,6 +201,7 @@ function openAIAccessory(accessoryImgSrc, accessoryName, accessoryType = 'neckla
         )}`);
 }
 
+// ── [PATCHED] runAIAccessory — action: ai-necklace ───────────
 async function runAIAccessory(accessoryImgSrc, accessoryName, accessoryType) {
     const userInput = document.getElementById('acc-photo-input');
     if (!userInput?.files[0]) { toast('Upload foto dulu!', 'error'); return; }
@@ -186,13 +213,13 @@ async function runAIAccessory(accessoryImgSrc, accessoryName, accessoryType) {
         const accUrl = accessoryImgSrc.startsWith('http')
             ? accessoryImgSrc
             : window.location.origin + '/' + accessoryImgSrc.replace(/^\//, '');
-        const res = await fetch('/api/youcam?action=ai-accessory', {
+
+        const res = await fetch('/api/youcam?action=ai-necklace', {  // ← diperbaiki dari ai-accessory
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 user_image_url: userImageUrl,
-                accessory_image_url: accUrl,
-                accessory_type: accessoryType,
+                necklace_image_url: accUrl,  // ← diperbaiki dari accessory_image_url
             }),
         });
         const data = await res.json();
@@ -206,8 +233,6 @@ async function runAIAccessory(accessoryImgSrc, accessoryName, accessoryType) {
 // ════════════════════════════════════════════════════════════
 // ── 3. AI HAIR COLOR — Cat Rambut ───────────────────────────
 // ════════════════════════════════════════════════════════════
-
-// Dipanggil dari kartu produk & submenu AI Advisor
 function openHairColorYoucam(colorName, colorHex) {
     showAIModal(`🎨 AI Hair Color — ${colorName}`, `
         <div style="display:flex;align-items:center;gap:10px;background:#1a1a1a;border-radius:10px;padding:12px;margin-bottom:15px;">
@@ -222,6 +247,7 @@ function openHairColorYoucam(colorName, colorHex) {
         )}`);
 }
 
+// ── [PATCHED] runAIHairColor — hanya 3 field, tanpa pattern ──
 async function runAIHairColor(colorName, colorHex) {
     const userInput = document.getElementById('hair-color-photo-input');
     if (!userInput?.files[0]) { toast('Upload foto dulu!', 'error'); return; }
@@ -233,7 +259,12 @@ async function runAIHairColor(colorName, colorHex) {
         const res = await fetch('/api/youcam?action=ai-hair-color', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_image_url: userImageUrl, color: colorHex, color_name: colorName }),
+            body: JSON.stringify({
+                user_image_url: userImageUrl,
+                color: colorHex,
+                color_name: colorName,
+                // TIDAK ada field pattern
+            }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || JSON.stringify(data));
@@ -262,18 +293,23 @@ function tryMakeupYoucam(makeupImgSrc, zone, makeupName) {
         )}`);
 }
 
+// ── [PATCHED] runAIMakeup — resize otomatis via uploadToImgBB ─
 async function runAIMakeup(zone, color, makeupName) {
     const userInput = document.getElementById('makeup-photo-input');
     if (!userInput?.files[0]) { toast('Upload foto dulu!', 'error'); return; }
     showAILoading('ai-result-area', 'Mengupload foto...');
     try {
         const userBase64 = await fileToBase64(userInput.files[0]);
-        const userImageUrl = await uploadToImgBB(userBase64);
+        const userImageUrl = await uploadToImgBB(userBase64); // resize otomatis di sini
         showAILoading('ai-result-area', `AI sedang mengaplikasikan ${makeupName}...`);
         const res = await fetch('/api/youcam?action=ai-makeup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_image_url: userImageUrl, zone, color }),
+            body: JSON.stringify({
+                user_image_url: userImageUrl,
+                zone,
+                color,
+            }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || JSON.stringify(data));
