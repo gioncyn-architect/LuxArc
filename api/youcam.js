@@ -1,9 +1,12 @@
 // api/youcam.js — Vercel Serverless Function v10 (BUGFIX)
+// Produk: AI Clothes V3, AI Necklace VTO, AI Makeup VTO,
+//         AI Hair Color, AI Hairstyle V2.1, Skin Analysis V2.1, AI Look VTO
+//
 // BugFix v10:
-//   [1] ai-hair-color: tambah field "pattern" di setiap palette
-//       → YouCam Hair Color API wajib ada pattern, kalau null → error "null pattern"
-//   [2] skin-analysis / runAutoDetectAnalysis: tambah guard undefined
-//       → jika scores tidak ada / struktur berbeda → tidak crash dengan "undefined"
+//   [1] ai-hair-color: tambah field "pattern" wajib di setiap palette
+//       → tanpa ini YouCam return error "null pattern"
+//   [2] skin-analysis: tambah guard result undefined
+//       → jika result null/undefined setelah polling → return error jelas
 
 const BASE_URL = 'https://yce-api-01.makeupar.com';
 
@@ -172,10 +175,9 @@ export default async function handler(req, res) {
       try { result = await pollTask(taskId, '/s2s/v2.1/task/skin-analysis'); }
       catch (e) { return res.status(500).json({ error: e.message }); }
 
-      // [FIX v10] Pastikan result ada sebelum return
-      // Jika result null/undefined → return error yang jelas, bukan "undefined"
+      // [FIX v10] Guard: result bisa undefined jika polling timeout tanpa throw
       if (!result) {
-        return res.status(500).json({ error: 'Skin analysis selesai tapi result kosong (undefined)' });
+        return res.status(500).json({ error: 'Skin analysis selesai tapi result kosong' });
       }
 
       return res.status(200).json(result);
@@ -273,16 +275,14 @@ export default async function handler(req, res) {
     }
 
     // ── 5. AI Hair Color ────────────────────────────────────
-    // [FIXED v10] Tambah field "pattern" di setiap palette
-    // YouCam Hair Color API wajib ada pattern → kalau null/tidak ada → error "null pattern"
+    // [FIX v10] Tambah field "pattern" wajib di setiap palette
+    // YouCam Hair Color API wajib ada pattern → tanpa ini error "null pattern"
     if (action === 'ai-hair-color') {
       const { user_image_url, color, color_name, preset, palettes } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
 
       let hairPayload = { src_file_url: user_image_url };
 
-      // Preset tidak dipakai lagi di frontend v5 (dihapus karena enum strict)
-      // Tapi tetap support jika suatu saat dikirim lagi
       if (preset) {
         hairPayload.preset = preset;
         console.log('[hair-color] Pakai preset:', preset);
@@ -290,14 +290,13 @@ export default async function handler(req, res) {
 
       if (palettes && Array.isArray(palettes) && palettes.length > 0) {
         // [FIX v10] Inject "pattern" ke setiap palette jika belum ada
-        // YouCam butuh pattern.name yang valid, default: "full" (seluruh rambut)
+        // pattern.name "full" = warnai seluruh rambut
         hairPayload.palettes = palettes.map(p => ({
           ...p,
           pattern: p.pattern || { name: 'full' },
         }));
         console.log('[hair-color] Palettes (fixed):', JSON.stringify(hairPayload.palettes));
       } else if (color) {
-        // Fallback dari color hex saja
         hairPayload.palettes = [{
           color: color,
           colorIntensity: 75,
