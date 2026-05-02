@@ -1,6 +1,5 @@
-// api/youcam.js — Vercel Serverless Function v11 (VALID FIX)
-// Fix berdasarkan dokumentasi resmi YouCam API Playground
-// Hair Color API hanya butuh: src_file_url + preset (nama string)
+// api/youcam.js — Vercel Serverless Function v12
+// FIX: Tambah endpoint ai-hat & ai-earring (YouCam 2D VTO)
 
 const BASE_URL = 'https://yce-api-01.makeupar.com';
 
@@ -17,7 +16,6 @@ const HAIRSTYLE_TEMPLATE_MAP = {
   pixie:    'pixie_01',
 };
 
-// Mapping nama warna UI (Indonesia) ke preset resmi YouCam
 const HAIR_PRESET_MAP = {
   'merah':        'Burgundy',
   'coklat':       'Chocolate Brown',
@@ -25,7 +23,6 @@ const HAIR_PRESET_MAP = {
   'biru':         'Ash Gray',
   'hitam':        'Dark Gray/Ice Blonde',
   'pirang':       'Copper Red/Golden Blonde',
-  // Nama preset lengkap (jika frontend kirim langsung dalam bahasa Inggris)
   'burgundy':                   'Burgundy',
   'burgundy/magenta pink':      'Burgundy/Magenta Pink',
   'ash gray':                   'Ash Gray',
@@ -286,13 +283,10 @@ export default async function handler(req, res) {
     }
 
     // ── 5. AI Hair Color ────────────────────────────────────
-    // [FIX v11] Payload resmi YouCam: { src_file_url, preset: "NamaPreset" }
-    // Tidak pakai palettes/pattern/color hex — hanya preset name string
     if (action === 'ai-hair-color') {
       const { user_image_url, color, color_name, preset } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
 
-      // Tentukan preset: prioritas dari field 'preset', lalu dari 'color_name', lalu dari 'color'
       const rawInput = preset || color_name || color || '';
       const resolvedPreset = HAIR_PRESET_MAP[rawInput.toLowerCase()] || rawInput;
 
@@ -356,11 +350,59 @@ export default async function handler(req, res) {
       return res.status(200).json({ result_url: out.result_url, ...out.raw });
     }
 
+    // ── 8. AI Hat VTO ───────────────────────────────────────
+    // Endpoint: /s2s/v2.0/task/2d-vto/hat
+    // Payload : src_file_url (foto user) + ref_file_url (foto topi) + gender
+    if (action === 'ai-hat') {
+      const { user_image_url, hat_image_url, gender } = body;
+      if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
+      if (!hat_image_url)  return res.status(400).json({ error: 'hat_image_url diperlukan' });
+
+      console.log(`[ai-hat] user=${user_image_url} hat=${hat_image_url} gender=${gender}`);
+
+      const out = await runTask('/s2s/v2.0/task/2d-vto/hat', {
+        src_file_url: user_image_url,
+        ref_file_url: hat_image_url,
+        gender: gender || 'female',   // 'female' | 'male'
+      });
+
+      if (!out.success) return res.status(out.status || 500).json({ error: out.error, detail: out.detail });
+      return res.status(200).json({ result_url: out.result_url, ...out.raw });
+    }
+
+    // ── 9. AI Earring VTO ───────────────────────────────────
+    // Endpoint: /s2s/v2.0/task/2d-vto/earring
+    // Payload : src_file_url + ref_file_urls (array, maks 2 gambar — kiri & kanan)
+    if (action === 'ai-earring') {
+      const { user_image_url, earring_image_url, earring_image_urls } = body;
+      if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
+
+      // Terima satu URL atau array URL (untuk anting kiri/kanan berbeda)
+      const refUrls = earring_image_urls?.length
+        ? earring_image_urls
+        : earring_image_url
+          ? [earring_image_url]
+          : null;
+
+      if (!refUrls) return res.status(400).json({ error: 'earring_image_url atau earring_image_urls diperlukan' });
+
+      console.log(`[ai-earring] user=${user_image_url} earrings=${JSON.stringify(refUrls)}`);
+
+      const out = await runTask('/s2s/v2.0/task/2d-vto/earring', {
+        src_file_url:  user_image_url,
+        ref_file_urls: refUrls,
+      });
+
+      if (!out.success) return res.status(out.status || 500).json({ error: out.error, detail: out.detail });
+      return res.status(200).json({ result_url: out.result_url, ...out.raw });
+    }
+
     return res.status(400).json({
       error: `Action tidak dikenal: "${action}"`,
       available_actions: [
         'skin-analysis', 'ai-clothes', 'ai-necklace',
         'ai-makeup', 'ai-hair-color', 'ai-hairstyle', 'ai-look',
+        'ai-hat', 'ai-earring',   // ← BARU
       ],
     });
 
