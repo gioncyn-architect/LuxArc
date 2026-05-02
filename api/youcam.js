@@ -388,13 +388,13 @@ export default async function handler(req, res) {
 
       const out = await runTask('/s2s/v2.0/task/2d-vto/earring', {
         source_info: {
-          src_file_url: user_image_url,
-        },
-        object_infos: refUrls.map(url => ({
-          ref_file_url: url,
-        })),
-      });
-
+  name: 'selfie',
+  src_file_url: user_image_url,
+},
+object_infos: refUrls.map((url, i) => ({
+  name: `earring_${i}`,
+  ref_file_url: url,
+})),
       if (!out.success) return res.status(out.status || 500).json({ error: out.error, detail: out.detail });
       return res.status(200).json({ result_url: out.result_url, ...out.raw });
     }
