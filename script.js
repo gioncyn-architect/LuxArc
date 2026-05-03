@@ -1,17 +1,17 @@
 // ============================================================
-// LuxArc AI — script.js COMPLETE v12 (BUGFIX EARRING IMG URL)
+// LuxArc AI — script.js CLEAN v13
 // Terhubung ke: /api/youcam (Vercel Serverless)
 // Fitur: AI Clothes, Hair Color, Makeup, Skin Analysis,
 //        Hairstyle, Accessory, Photo Enhancer, Hat, Earring
-// BugFix v12:
-//   [1] runAIEarring — fix earring image URL tidak bisa diakses YouCam:
-//       - earringImgSrc lokal (/anting-01.webp) sekarang di-fetch
-//         lalu di-upload ke ImgBB terlebih dahulu sebelum dikirim
-//         ke endpoint YouCam, sehingga YouCam mendapat URL publik
-//         yang valid (sama seperti pola di runAIClothes & runAIHat).
-// PATCH UI:
-//   [2] uploadPhotoHTML — max-height foto preview 250px → 160px
-//   [3] showAIResult    — auto scroll ke hasil AI setelah selesai
+// CLEAN v13:
+//   [1] Hapus 3x duplikat override window.openCheckout → 1 fungsi bersih
+//   [2] Hapus injectBudgetFilterUI() — CSS sudah ada di style.css
+//   [3] Hapus injectShareDiscountUI() — konflik dengan HTML nav
+//   [4] Hapus toggleLanguage() — tidak dipanggil dari mana pun
+//   [5] Hapus mockupVoiceSearch() & mockupVisualSearch() — tidak dipakai
+//   [6] Hapus openCheckout_original reference — tidak pernah didefinisikan
+//   [7] Hapus _origOpenCheckoutHTML — override broken sebelum fungsi ada
+//   [8] Perbaiki syncCartBadge() — badge hidden saat count 0 on load
 // ============================================================
 
 const IMGBB_API_KEY = 'f38d35d294b0887931317043aa4ce731';
@@ -129,7 +129,6 @@ function showAIModal(title, html) {
     openModal('youcam-modal');
 }
 
-// ✅ PATCH [2]: max-height foto preview 250px → 160px
 function uploadPhotoHTML(inputId, imgId, previewId, btnLabel, btnOnclick) {
     return `
         <label style="display:block;background:#1a1a1a;border:1.5px dashed #FFD700;border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:15px;">
@@ -156,7 +155,6 @@ function previewPhoto(input, imgId, previewId) {
     }
 }
 
-// ✅ PATCH [3]: auto scroll ke hasil AI setelah selesai
 function showAIResult(containerId, outputUrl, filename) {
     const container = document.getElementById(containerId);
     container.innerHTML = `
@@ -168,10 +166,24 @@ function showAIResult(containerId, outputUrl, filename) {
         </div>`;
     lookbookImages.push(outputUrl);
 
-    // Auto scroll ke hasil agar tidak perlu scroll manual
     setTimeout(() => {
         container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 100);
+
+    // Simpan pasangan before/after
+    const inputIds = [
+        'user-photo-input','makeup-photo-input','hair-color-photo-input',
+        'skin-photo-input','acc-photo-input','enhance-photo-input',
+        'autodetect-photo-input','hat-photo-input','earring-photo-input'
+    ];
+    let beforeUrl = null;
+    for (const id of inputIds) {
+        const imgEl = document.getElementById(id.replace('-input', '-img'));
+        if (imgEl && imgEl.src && !imgEl.src.endsWith('/')) { beforeUrl = imgEl.src; break; }
+    }
+    if (beforeUrl) {
+        beforeAfterPairs.push({ before: beforeUrl, after: outputUrl, label: filename || 'AI Result' });
+    }
 }
 
 function showAILoading(containerId, msg) {
@@ -618,7 +630,7 @@ async function runPhotoEnhancer() {
 }
 
 // ════════════════════════════════════════════════════════════
-// ── 8. AI HAT — Virtual Try-On Topi (v11 FIXED) ─────────────
+// ── 8. AI HAT — Virtual Try-On Topi ─────────────────────────
 // ════════════════════════════════════════════════════════════
 function openAIHat(hatImgSrc, hatName) {
     showAIModal(`🎩 AI Hat — ${hatName}`, `
@@ -658,7 +670,7 @@ async function runAIHat(hatImgSrc, hatName) {
 }
 
 // ════════════════════════════════════════════════════════════
-// ── 9. AI EARRING — Virtual Try-On Anting (v12 FIXED) ───────
+// ── 9. AI EARRING — Virtual Try-On Anting ───────────────────
 // ════════════════════════════════════════════════════════════
 function openAIEarring(earringImgSrc, earringName) {
     showAIModal(`💎 AI Earring — ${earringName}`, `
@@ -1028,25 +1040,8 @@ async function runAutoDetectAnalysis() {
 }
 
 // ════════════════════════════════════════════════════════════
-// ── FITUR A: BUDGET FILTER ───────────────────────────────────
+// ── BUDGET FILTER ────────────────────────────────────────────
 // ════════════════════════════════════════════════════════════
-(function injectBudgetFilterUI() {
-    document.addEventListener('DOMContentLoaded', () => {
-        const style = document.createElement('style');
-        style.textContent = `
-            .budget-preset-btn {
-                padding:5px 12px; border-radius:20px; border:1.5px solid rgba(255,255,255,0.15);
-                background:rgba(255,255,255,0.05); color:#fff; font-size:0.72em; cursor:pointer;
-                transition:all 0.2s; font-family:inherit;
-            }
-            .budget-preset-btn.active, .budget-preset-btn:hover {
-                border-color:#FFD700; background:rgba(255,215,0,0.12); color:#FFD700;
-            }
-        `;
-        document.head.appendChild(style);
-    });
-})();
-
 let budgetFilterActive = false;
 let currentBudgetMin = 0;
 let currentBudgetMax = 9999999;
@@ -1100,10 +1095,9 @@ function applyBudgetFilter() {
         const priceEl = card.querySelector('.product-price');
         const price = priceEl ? parseInt(priceEl.dataset.price || '0') : 0;
         const inRange = price >= currentBudgetMin && price <= currentBudgetMax;
-        if (!card.classList.contains('budget-hidden')) card.style.display = '';
         card.classList.toggle('budget-hidden', !inRange);
         if (inRange) {
-            card.style.display = card.style.display === 'none' ? 'none' : 'flex';
+            card.style.display = '';
             count++;
         } else {
             card.style.display = 'none';
@@ -1128,22 +1122,8 @@ function resetBudgetFilter() {
 }
 
 // ════════════════════════════════════════════════════════════
-// ── FITUR B: SHARE & DISKON OTOMATIS ─────────────────────────
+// ── SHARE & DISKON ───────────────────────────────────────────
 // ════════════════════════════════════════════════════════════
-(function injectShareDiscountUI() {
-    document.addEventListener('DOMContentLoaded', () => {
-        const navActions = document.querySelector('.nav-actions');
-        if (navActions) {
-            const shareBtn = document.createElement('button');
-            shareBtn.className = 'nav-btn';
-            shareBtn.title = 'Share & Diskon';
-            shareBtn.innerHTML = '🎁';
-            shareBtn.onclick = openShareDiscount;
-            navActions.insertBefore(shareBtn, navActions.querySelector('.nav-btn'));
-        }
-    });
-})();
-
 const PROMO_CODES = [
     { code: 'LUXARC10', discount: 0.10, label: '10% OFF', desc: 'Diskon 10% semua produk' },
     { code: 'VIVI15',   discount: 0.15, label: '15% OFF', desc: 'Spesial untuk Vivi! Diskon 15%' },
@@ -1185,7 +1165,7 @@ function openShareDiscount() {
         </div>
         <p style="color:#FFD700;font-weight:600;margin-bottom:10px;font-size:0.9em;">🏷️ Kode Promo Tersedia:</p>
         ${promoListHTML}
-        <div style="display:flex;gap:8px;margin-top:14px;" id="promo-input-wrap">
+        <div style="display:flex;gap:8px;margin-top:14px;">
             <input type="text" id="promo-code-input" placeholder="Masukkan kode promo..."
                 style="flex:1;background:#1a1a1a;border:1.5px solid #333;border-radius:10px;
                     color:#fff;padding:10px 12px;font-size:0.88em;font-family:inherit;outline:none;">
@@ -1256,58 +1236,17 @@ function copyShareLink() {
         .catch(() => toast('Salin manual: ' + window.location.href, 'info'));
 }
 
-const _origOpenCheckout = window.openCheckout;
-window.openCheckout = function() {
-    if (typeof openCheckout_original === 'function') openCheckout_original();
-};
-document.addEventListener('DOMContentLoaded', () => {
-    const _oc = window.openCheckout;
-    window.openCheckout = function() {
-        _oc && _oc();
-        setTimeout(() => {
-            if (activeDiscount > 0 && cart.length > 0) {
-                const rawTotal = cart.reduce((s, i) => s + (Number(i.price) || 0), 0);
-                const discounted = Math.round(rawTotal * (1 - activeDiscount));
-                const saving    = rawTotal - discounted;
-                const totalEl   = document.getElementById('total-price');
-                if (totalEl) {
-                    totalEl.innerHTML = `
-                        <span style="text-decoration:line-through;color:#888;font-size:0.85em;">Rp ${formatRupiah(rawTotal)}</span>
-                        <span style="color:#4CAF50;font-size:0.8em;margin:0 4px;">−${Math.round(activeDiscount*100)}%</span>
-                        <br><span style="color:#FFD700;">Rp ${formatRupiah(discounted)}</span>
-                        <small style="color:#4CAF50;display:block;font-size:0.75em;">Hemat Rp ${formatRupiah(saving)} 🎉</small>`;
-                }
-            }
-        }, 100);
-    };
-});
-
 // ════════════════════════════════════════════════════════════
-// ── FITUR C: LOOKBOOK + COMPARE BEFORE/AFTER ─────────────────
+// ── LOOKBOOK + BEFORE/AFTER ──────────────────────────────────
 // ════════════════════════════════════════════════════════════
 let beforeAfterPairs = [];
 
-const _origShowAIResult = window.showAIResult;
-window.showAIResult = function(containerId, outputUrl, filename) {
-    _origShowAIResult(containerId, outputUrl, filename);
-    const inputIds = ['user-photo-input','makeup-photo-input','hair-color-photo-input','skin-photo-input','acc-photo-input','enhance-photo-input','autodetect-photo-input','hat-photo-input','earring-photo-input'];
-    let beforeUrl = null;
-    for (const id of inputIds) {
-        const imgEl = document.getElementById(id.replace('-input', '-img'));
-        if (imgEl && imgEl.src && !imgEl.src.endsWith('/')) { beforeUrl = imgEl.src; break; }
-    }
-    if (beforeUrl) {
-        beforeAfterPairs.push({ before: beforeUrl, after: outputUrl, label: filename || 'AI Result' });
-    }
-};
-
-const _origOpenLookbook = window.openLookbook;
-window.openLookbook = function() {
+function openLookbook() {
     const gallery = document.getElementById('lookbook-gallery');
     const hasBA = beforeAfterPairs.length > 0;
 
     gallery.innerHTML = `
-        <div style="display:flex;gap:8px;margin-bottom:14px;grid-column:1/-1;" id="lookbook-tabs">
+        <div style="display:flex;gap:8px;margin-bottom:14px;grid-column:1/-1;">
             <button class="lookbook-tab-btn active" onclick="switchLookbookTab('gallery',this)" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid #FFD700;background:rgba(255,215,0,0.12);color:#FFD700;font-family:inherit;font-size:0.82em;cursor:pointer;">📸 Lookbook</button>
             <button class="lookbook-tab-btn" onclick="switchLookbookTab('compare',this)" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.15);background:transparent;color:#aaa;font-family:inherit;font-size:0.82em;cursor:pointer;">✨ Before/After</button>
         </div>
@@ -1328,7 +1267,7 @@ window.openLookbook = function() {
         </div>`;
 
     openModal('lookbook-modal');
-};
+}
 
 function switchLookbookTab(tab, btn) {
     document.querySelectorAll('.lookbook-tab-btn').forEach(b => {
@@ -1426,19 +1365,6 @@ const translations = {
         toastCart:"added to cart!", toastPay:"Payment Successful! 🎉"
     }
 };
-
-function toggleLanguage() {
-    currentLang = currentLang === 'id' ? 'en' : 'id';
-    document.getElementById('btn-lang').innerText = currentLang.toUpperCase();
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (translations[currentLang][key]) el.innerHTML = translations[currentLang][key];
-    });
-    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-        const key = el.getAttribute('data-i18n-placeholder');
-        if (translations[currentLang][key]) el.placeholder = translations[currentLang][key];
-    });
-}
 
 function toast(msg, type = 'info') {
     const stack = document.getElementById('toast-stack');
@@ -1587,9 +1513,6 @@ document.getElementById('search-input')?.addEventListener('input', function(e) {
     document.getElementById('product-count').innerText = `${count} produk`;
 });
 
-function mockupVoiceSearch() { toast('🎙️ AI Listening...'); }
-function mockupVisualSearch() { toast('📷 AI Visual Scanner...'); }
-
 function filterProducts(category, btn) {
     document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -1663,14 +1586,6 @@ function takeSnapshot() {
     toast('📸 Foto disimpan ke Lookbook!');
 }
 
-function openLookbook() {
-    const gallery = document.getElementById('lookbook-gallery');
-    gallery.innerHTML = lookbookImages.length === 0
-        ? '<p style="grid-column:1/-1;text-align:center;color:#888;padding:20px;">Belum ada foto.</p>'
-        : lookbookImages.map((img, i) => `<div onclick="openFullImage(${i})" style="cursor:pointer;"><img src="${img}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;"></div>`).join('');
-    openModal('lookbook-modal');
-}
-
 function openFullImage(index) {
     currentViewingImageIndex = index;
     document.getElementById('full-img-display').src = lookbookImages[index];
@@ -1711,6 +1626,7 @@ function addToCart(name, price) {
     if (document.getElementById('page-keranjang')?.classList.contains('active')) renderCartPage();
 }
 
+// FIX: badge selalu sinkron — hidden saat 0, tampil saat > 0
 function syncCartBadge() {
     const count = cart.length;
     const navBadge = document.getElementById('cart-count');
@@ -1719,14 +1635,18 @@ function syncCartBadge() {
     if (bnavBadge) {
         bnavBadge.innerText = count;
         bnavBadge.style.display = count > 0 ? 'flex' : 'none';
-        bnavBadge.classList.add('bump');
-        setTimeout(() => bnavBadge.classList.remove('bump'), 250);
+        if (count > 0) {
+            bnavBadge.classList.add('bump');
+            setTimeout(() => bnavBadge.classList.remove('bump'), 250);
+        }
     }
 }
 
 function openCheckout() {
     const div = document.getElementById('cart-items');
     const totalSection = document.getElementById('cart-total-section');
+    if (!div) return;
+
     if (cart.length === 0) {
         div.innerHTML = '<p style="text-align:center;padding:20px;color:#888;">Keranjang kosong</p>';
         totalSection.style.display = 'none';
@@ -1739,8 +1659,37 @@ function openCheckout() {
                     <button onclick="removeFromCart(${idx})" style="background:none;border:none;color:#ff4444;font-size:1.1em;cursor:pointer;">🗑</button>
                 </div>
             </div>`).join('');
-        const total = cart.reduce((a, b) => a + (Number(b.price) || 0), 0);
-        document.getElementById('total-price').innerText = 'Rp ' + formatRupiah(total);
+
+        let rawTotal = cart.reduce((a, b) => a + (Number(b.price) || 0), 0);
+        const totalEl = document.getElementById('total-price');
+
+        if (activeDiscount > 0) {
+            const discounted = Math.round(rawTotal * (1 - activeDiscount));
+            const saving = rawTotal - discounted;
+            if (totalEl) {
+                totalEl.innerHTML = `
+                    <span style="text-decoration:line-through;color:#888;font-size:0.85em;">Rp ${formatRupiah(rawTotal)}</span>
+                    <span style="color:#4CAF50;font-size:0.8em;margin:0 4px;">−${Math.round(activeDiscount*100)}%</span>
+                    <br><span style="color:#FFD700;">Rp ${formatRupiah(discounted)}</span>
+                    <small style="color:#4CAF50;display:block;font-size:0.75em;">Hemat Rp ${formatRupiah(saving)} 🎉</small>`;
+            }
+        } else {
+            if (totalEl) totalEl.innerText = 'Rp ' + formatRupiah(rawTotal);
+        }
+
+        // Banner promo aktif di modal checkout
+        const banner = document.getElementById('active-promo-banner');
+        if (banner) {
+            if (activePromoCode && activeDiscount > 0) {
+                const promo = PROMO_CODES.find(p => p.code === activePromoCode);
+                document.getElementById('active-promo-label').textContent = `Kode: ${activePromoCode} — Diskon ${Math.round(activeDiscount*100)}%`;
+                document.getElementById('active-promo-desc').textContent = promo ? promo.desc : '';
+                banner.style.display = 'flex';
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
         document.getElementById('va-number').innerText = `8801 ${Math.floor(10000000 + Math.random() * 90000000)}`;
         totalSection.style.display = 'block';
     }
@@ -1764,9 +1713,18 @@ function processPayment() {
     setTimeout(() => {
         toast(translations[currentLang].toastPay);
         cart = [];
+        activePromoCode = null;
+        activeDiscount = 0;
         syncCartBadge();
         closeModal('checkout-modal');
     }, 1500);
+}
+
+function removePromo() {
+    activePromoCode = null;
+    activeDiscount  = 0;
+    openCheckout();
+    toast('Kode promo dihapus.', 'info');
 }
 
 // ── Wishlist ──────────────────────────────────────────────────
@@ -1827,7 +1785,6 @@ function closeSettingsDrawer() {
 
 function setLanguage(lang) {
     currentLang = lang;
-    document.getElementById('btn-lang').innerText = lang.toUpperCase();
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (translations[currentLang][key]) el.innerHTML = translations[currentLang][key];
@@ -1836,22 +1793,34 @@ function setLanguage(lang) {
         const key = el.getAttribute('data-i18n-placeholder');
         if (translations[currentLang][key]) el.placeholder = translations[currentLang][key];
     });
-    document.getElementById('lang-id-btn').style.borderColor = lang === 'id' ? '#FFD700' : 'rgba(255,255,255,0.15)';
-    document.getElementById('lang-id-btn').style.color = lang === 'id' ? '#FFD700' : '#aaa';
-    document.getElementById('lang-id-btn').style.background = lang === 'id' ? 'rgba(255,215,0,0.12)' : 'transparent';
-    document.getElementById('lang-en-btn').style.borderColor = lang === 'en' ? '#FFD700' : 'rgba(255,255,255,0.15)';
-    document.getElementById('lang-en-btn').style.color = lang === 'en' ? '#FFD700' : '#aaa';
-    document.getElementById('lang-en-btn').style.background = lang === 'en' ? 'rgba(255,215,0,0.12)' : 'transparent';
+    const idBtn = document.getElementById('lang-id-btn');
+    const enBtn = document.getElementById('lang-en-btn');
+    if (idBtn) {
+        idBtn.style.borderColor = lang === 'id' ? '#FFD700' : 'rgba(255,255,255,0.15)';
+        idBtn.style.color = lang === 'id' ? '#FFD700' : '#aaa';
+        idBtn.style.background = lang === 'id' ? 'rgba(255,215,0,0.12)' : 'transparent';
+    }
+    if (enBtn) {
+        enBtn.style.borderColor = lang === 'en' ? '#FFD700' : 'rgba(255,255,255,0.15)';
+        enBtn.style.color = lang === 'en' ? '#FFD700' : '#aaa';
+        enBtn.style.background = lang === 'en' ? 'rgba(255,215,0,0.12)' : 'transparent';
+    }
 }
 
 function setCurrency(curr) {
     currentCurrency = curr;
-    document.getElementById('curr-idr-btn').style.borderColor = curr === 'IDR' ? '#FFD700' : 'rgba(255,255,255,0.15)';
-    document.getElementById('curr-idr-btn').style.color = curr === 'IDR' ? '#FFD700' : '#aaa';
-    document.getElementById('curr-idr-btn').style.background = curr === 'IDR' ? 'rgba(255,215,0,0.12)' : 'transparent';
-    document.getElementById('curr-usd-btn').style.borderColor = curr === 'USD' ? '#FFD700' : 'rgba(255,255,255,0.15)';
-    document.getElementById('curr-usd-btn').style.color = curr === 'USD' ? '#FFD700' : '#aaa';
-    document.getElementById('curr-usd-btn').style.background = curr === 'USD' ? 'rgba(255,215,0,0.12)' : 'transparent';
+    const idrBtn = document.getElementById('curr-idr-btn');
+    const usdBtn = document.getElementById('curr-usd-btn');
+    if (idrBtn) {
+        idrBtn.style.borderColor = curr === 'IDR' ? '#FFD700' : 'rgba(255,255,255,0.15)';
+        idrBtn.style.color = curr === 'IDR' ? '#FFD700' : '#aaa';
+        idrBtn.style.background = curr === 'IDR' ? 'rgba(255,215,0,0.12)' : 'transparent';
+    }
+    if (usdBtn) {
+        usdBtn.style.borderColor = curr === 'USD' ? '#FFD700' : 'rgba(255,255,255,0.15)';
+        usdBtn.style.color = curr === 'USD' ? '#FFD700' : '#aaa';
+        usdBtn.style.background = curr === 'USD' ? 'rgba(255,215,0,0.12)' : 'transparent';
+    }
 
     document.querySelectorAll('.product-price').forEach(el => {
         const rawPrice = parseInt(el.dataset.price || '0');
@@ -1880,6 +1849,7 @@ function renderDrawerVoucher() {
     }
 }
 
+// ── Service Worker ────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
@@ -1888,6 +1858,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// ── Init ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    if (typeof syncCartBadge === 'function') syncCartBadge();
+    syncCartBadge();
 });
