@@ -1,6 +1,7 @@
-// api/youcam.js — Vercel Serverless Function v12
-// FIX: ai-earring pakai wrapper source_info + object_infos
-// FIX: ai-hat endpoint → /s2s/v2.0/task/hat (bukan /s2s/v2.0/task/2d-vto/hat)
+// api/youcam.js — Vercel Serverless Function v13
+// FIX v13: ai-earring — tambah field "name" wajib di source_info & object_infos
+//          sesuai error: [Path '/source_info'] Object has missing required properties (["name"])
+//                        [Path '/object_infos/0'] Object has missing required properties (["name"])
 
 const BASE_URL = 'https://yce-api-01.makeupar.com';
 
@@ -352,7 +353,6 @@ export default async function handler(req, res) {
     }
 
     // ── 8. AI Hat VTO ───────────────────────────────────────
-    // FIX: endpoint yang benar adalah /s2s/v2.0/task/hat (bukan /s2s/v2.0/task/2d-vto/hat)
     if (action === 'ai-hat') {
       const { user_image_url, hat_image_url, gender } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
@@ -370,13 +370,17 @@ export default async function handler(req, res) {
       return res.status(200).json({ result_url: out.result_url, ...out.raw });
     }
 
-    // ── 9. AI Earring VTO ───────────────────────────────────
-    // FIX: payload harus dibungkus dalam source_info + object_infos (bukan flat params)
+    // ── 9. AI Earring VTO v13 ───────────────────────────────
+    // YouCam membutuhkan field "name" di source_info dan setiap object_infos.
+    // Format lengkap yang benar berdasarkan error schema:
+    //   source_info.name  → identifier untuk foto user (bebas, misal "user")
+    //   object_infos[].name → identifier untuk tiap anting (misal "earring_0")
     if (action === 'ai-earring') {
       const { user_image_url, earring_image_url, earring_image_urls } = body;
       if (!user_image_url) return res.status(400).json({ error: 'user_image_url diperlukan' });
 
-      const refUrls = earring_image_urls?.length
+      // Dukung single URL maupun array
+      const refUrls = Array.isArray(earring_image_urls) && earring_image_urls.length
         ? earring_image_urls
         : earring_image_url
           ? [earring_image_url]
@@ -386,11 +390,14 @@ export default async function handler(req, res) {
 
       console.log(`[ai-earring] user=${user_image_url} earrings=${JSON.stringify(refUrls)}`);
 
+      // ✅ FIX v13: tambah field "name" yang wajib ada di source_info & object_infos
       const out = await runTask('/s2s/v2.0/task/2d-vto/earring', {
         source_info: {
+          name:        'user',          // ✅ wajib — identifier foto user
           src_file_url: user_image_url,
         },
-        object_infos: refUrls.map(url => ({
+        object_infos: refUrls.map((url, idx) => ({
+          name:        `earring_${idx}`, // ✅ wajib — identifier per anting
           ref_file_url: url,
         })),
       });
