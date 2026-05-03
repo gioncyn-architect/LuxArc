@@ -9,6 +9,9 @@
 //         lalu di-upload ke ImgBB terlebih dahulu sebelum dikirim
 //         ke endpoint YouCam, sehingga YouCam mendapat URL publik
 //         yang valid (sama seperti pola di runAIClothes & runAIHat).
+// PATCH UI:
+//   [2] uploadPhotoHTML — max-height foto preview 250px → 160px
+//   [3] showAIResult    — auto scroll ke hasil AI setelah selesai
 // ============================================================
 
 const IMGBB_API_KEY = 'f38d35d294b0887931317043aa4ce731';
@@ -57,11 +60,7 @@ async function uploadToImgBB(base64) {
 }
 
 // ── Upload gambar dari URL lokal / eksternal ke ImgBB ────────
-// Dipakai agar referensi produk (anting, topi, dsb.) yang
-// disimpan sebagai path lokal bisa diakses oleh API pihak ketiga.
 async function uploadUrlToImgBB(url) {
-    // Jika sudah URL ImgBB / URL publik lain yang pasti bisa diakses,
-    // tetap upload ulang agar konsisten dan menghindari CORS/referer block.
     const absoluteUrl = url.startsWith('http')
         ? url
         : window.location.origin + '/' + url.replace(/^\//, '');
@@ -130,6 +129,7 @@ function showAIModal(title, html) {
     openModal('youcam-modal');
 }
 
+// ✅ PATCH [2]: max-height foto preview 250px → 160px
 function uploadPhotoHTML(inputId, imgId, previewId, btnLabel, btnOnclick) {
     return `
         <label style="display:block;background:#1a1a1a;border:1.5px dashed #FFD700;border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:15px;">
@@ -137,7 +137,7 @@ function uploadPhotoHTML(inputId, imgId, previewId, btnLabel, btnOnclick) {
             <input type="file" accept="image/*" id="${inputId}" style="display:none;" onchange="previewPhoto(this,'${imgId}','${previewId}')">
         </label>
         <div id="${previewId}" style="display:none;margin-bottom:15px;">
-            <img id="${imgId}" style="width:100%;border-radius:12px;max-height:250px;object-fit:cover;">
+            <img id="${imgId}" style="width:100%;border-radius:12px;max-height:160px;object-fit:cover;">
         </div>
         <button class="btn btn-gold shimmer-btn" style="width:100%;" onclick="${btnOnclick}">
             ${btnLabel}
@@ -156,15 +156,22 @@ function previewPhoto(input, imgId, previewId) {
     }
 }
 
+// ✅ PATCH [3]: auto scroll ke hasil AI setelah selesai
 function showAIResult(containerId, outputUrl, filename) {
-    document.getElementById(containerId).innerHTML = `
+    const container = document.getElementById(containerId);
+    container.innerHTML = `
         <p style="color:#FFD700;margin-bottom:10px;">✅ Hasil AI:</p>
         <img src="${outputUrl}" style="width:100%;border-radius:12px;margin-bottom:15px;">
         <div style="display:flex;gap:10px;">
             <a href="${outputUrl}" download="${filename}.jpg" class="btn btn-gold shimmer-btn" style="flex:1;text-align:center;text-decoration:none;">⬇️ Unduh</a>
-            <button class="btn btn-ghost" style="flex:1;" onclick="window.open('https://api.whatsapp.com/send?text=Lihat hasilku dari LuxArc AI! ${encodeURIComponent(outputUrl)}','_blank')">📲 Share WA</button>
+            <button class="btn btn-ghost" style="flex:1;" onclick="window.open('https://api.whatsapp.com/send?text=Lihat hasilku dari LuxArc AI! ${encodeURIComponent(outputUrl)}','_blank')">📲 Bagikan WA</button>
         </div>`;
     lookbookImages.push(outputUrl);
+
+    // Auto scroll ke hasil agar tidak perlu scroll manual
+    setTimeout(() => {
+        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
 }
 
 function showAILoading(containerId, msg) {
@@ -535,7 +542,7 @@ function openAIHairstyle() {
             <input type="file" accept="image/*" id="hair-photo-input" style="display:none;" onchange="previewPhoto(this,'hair-photo-img','hair-photo-preview')">
         </label>
         <div id="hair-photo-preview" style="display:none;margin-bottom:15px;">
-            <img id="hair-photo-img" style="width:100%;border-radius:12px;max-height:250px;object-fit:cover;">
+            <img id="hair-photo-img" style="width:100%;border-radius:12px;max-height:160px;object-fit:cover;">
         </div>
         <p style="color:#aaa;margin-bottom:8px;font-size:0.88em;">Pilih Gaya:</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:15px;">
@@ -637,8 +644,8 @@ async function runAIHat(hatImgSrc, hatName) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                user_image_url: userImageUrl,  // ✅ FIXED v11: was src_file_id
-                hat_image_url:  hatUrl,         // ✅ FIXED v11: was ref_file_url
+                user_image_url: userImageUrl,
+                hat_image_url:  hatUrl,
                 gender: 'female',
             }),
         });
@@ -667,23 +674,17 @@ async function runAIEarring(earringImgSrc, earringName) {
     if (!userInput?.files[0]) { toast('Upload foto dulu!', 'error'); return; }
     showAILoading('ai-result-area', 'Mengupload foto...');
     try {
-        // Upload foto user
         const userBase64 = await fileToBase64(userInput.files[0]);
         const userImageUrl = await uploadToImgBB(userBase64);
-
-        // ✅ FIXED v12: Upload gambar anting ke ImgBB terlebih dahulu
-        // agar YouCam mendapat URL publik yang bisa diakses —
-        // URL lokal seperti /anting-01.webp tidak bisa dijangkau dari server YouCam.
         showAILoading('ai-result-area', `Mengupload gambar anting...`);
         const earringPublicUrl = await uploadUrlToImgBB(earringImgSrc);
-
         showAILoading('ai-result-area', `AI sedang memakaikan ${earringName}...`);
         const res = await fetch('/api/youcam?action=ai-earring', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                user_image_url:    userImageUrl,      // ✅ URL publik foto user
-                earring_image_url: earringPublicUrl,  // ✅ URL publik anting (sudah di-upload ke ImgBB)
+                user_image_url:    userImageUrl,
+                earring_image_url: earringPublicUrl,
             }),
         });
         const data = await res.json();
@@ -893,7 +894,7 @@ function triggerAutoDetect() {
             </label>
             <div id="autodetect-photo-preview" style="display:none;margin-bottom:15px;">
                 <img id="autodetect-photo-img"
-                    style="width:100%;border-radius:12px;max-height:250px;object-fit:cover;">
+                    style="width:100%;border-radius:12px;max-height:160px;object-fit:cover;">
             </div>
             <button class="btn btn-gold shimmer-btn" style="width:100%;"
                 onclick="runAutoDetectAnalysis()">
