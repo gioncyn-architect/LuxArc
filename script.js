@@ -620,6 +620,43 @@ async function runSkinAnalysis(productName) {
             <p style="color:#aaa;font-size:0.88em;text-align:center;">Rekomendasi: <b style="color:#FFD700;">${productName}</b></p>`;
 
         document.getElementById('ai-result-area').innerHTML = resultHTML;
+        // ── Rekomendasi produk berdasarkan skor ──
+const acneScore = Number(scores?.acne?.score ?? scores?.acne ?? 100);
+const moistureScore = Number(scores?.moisture?.score ?? scores?.moisture ?? 100);
+const radianceScore = Number(scores?.radiance?.score ?? scores?.radiance ?? 100);
+
+let recommendedProducts = [];
+
+if (acneScore < 60) {
+    recommendedProducts.push(
+        { name: 'Skincare Jerawat', price: 'Rp 195.000', reason: 'Cocok untuk kulit berjerawat' },
+        { name: 'Serum Niacinamide', price: 'Rp 165.000', reason: 'Mengontrol pori & jerawat' },
+        { name: 'Clay Mask', price: 'Rp 95.000', reason: 'Membersihkan pori secara mendalam' }
+    );
+} else if (moistureScore < 60) {
+    recommendedProducts.push(
+        { name: 'Moisturizer Gel', price: 'Rp 175.000', reason: 'Melembapkan kulit kering' },
+        { name: 'Toner AHA BHA', price: 'Rp 145.000', reason: 'Eksfoliasi & hidrasi kulit' }
+    );
+} else if (radianceScore < 60) {
+    recommendedProducts.push(
+        { name: 'Skincare Pemutih', price: 'Rp 215.000', reason: 'Mencerahkan & glowing' },
+        { name: 'Sunscreen SPF 50', price: 'Rp 125.000', reason: 'Proteksi UV harian' }
+    );
+} else {
+    recommendedProducts.push(
+        { name: 'Sunscreen SPF 50', price: 'Rp 125.000', reason: 'Proteksi UV setiap hari' },
+        { name: 'Moisturizer Gel', price: 'Rp 175.000', reason: 'Menjaga kelembapan kulit' }
+    );
+}
+
+if (recommendedProducts.length > 0) {
+    const recTitle = document.createElement('p');
+    recTitle.style.cssText = 'color:#FFD700;font-weight:600;margin:16px 0 8px;';
+    recTitle.textContent = '🎯 Produk Rekomendasi untuk Kulitmu:';
+    document.getElementById('ai-result-area').appendChild(recTitle);
+    renderAIProductCards(recommendedProducts);
+}
     } catch (err) { showAIError('ai-result-area', err.message); }
 }
 
