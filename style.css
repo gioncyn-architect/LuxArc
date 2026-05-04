@@ -519,11 +519,11 @@ button[onclick*="toggleLang"],
    ===================================================== */
 .product-price {
   font-family: 'DM Sans',sans-serif;
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 0.95rem;
+  font-weight: 600;
   color: var(--gold);
   line-height: 1.1;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   display: flex;
   align-items: baseline;
   gap: 2px;
@@ -541,8 +541,8 @@ button[onclick*="toggleLang"],
 
 .price-val {
   font-size: 1em;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  letter-spacing: -0;
 }
 
 /* ── Buttons ── */
