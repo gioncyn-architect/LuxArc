@@ -941,13 +941,14 @@ async function sendChat() {
     }
 
     appendTypingIndicator();
-    const reply = await sendToGroq(text);
-    removeTypingIndicator();
-    appendMessage('bot', reply);
+     const result = await sendToGroq(text);
+removeTypingIndicator();
+const replyText = result?.reply || 'Maaf, coba lagi! 😊';
+appendMessage('bot', replyText);
 
-    groqChatHistory.push({ role: 'user', text });
-    groqChatHistory.push({ role: 'bot', text: reply });
-
+groqChatHistory.push({ role: 'user', text });
+groqChatHistory.push({ role: 'bot', text: replyText });
+    
     if (groqChatHistory.length > 20) groqChatHistory = groqChatHistory.slice(-20);
 
     input.disabled = false;
