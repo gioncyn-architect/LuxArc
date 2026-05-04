@@ -72,11 +72,47 @@ HAIR COLOR:
 - Cat Rambut Premium (AI Hair Color Try-On) - Rp 125.000
 `;
 
-const SYSTEM_PROMPT = `You are LuxArc AI Style Advisor — a warm, friendly personal stylist for LuxArc AI fashion platform.
+// Language detection function
+function detectLanguage(message) {
+  const indonesianWords = [
+    'aku', 'saya', 'kamu', 'yang', 'dan', 'di', 'ke', 'ini', 'itu',
+    'mau', 'tidak', 'bisa', 'untuk', 'dengan', 'ada', 'apa', 'ya',
+    'dong', 'deh', 'nih', 'loh', 'banget', 'gaun', 'baju', 'pakai',
+    'pesta', 'cocok', 'bagus', 'gimana', 'boleh', 'perlu', 'butuh',
+    'ingin', 'pengen', 'coba', 'lihat', 'pilih', 'suka', 'harga',
+    'murah', 'mahal', 'warna', 'ukuran', 'pas', 'sesuai', 'acara',
+    'kondangan', 'kerja', 'santai', 'formal', 'casual', 'hari', 'malam',
+    'pagi', 'cantik', 'keren', 'bagaimana', 'kalau', 'jika', 'atau',
+    'tapi', 'karena', 'jadi', 'sudah', 'belum', 'sedang', 'akan'
+  ];
+  const msgLower = message.toLowerCase();
+  const foundWords = indonesianWords.filter(word => {
+    const regex = new RegExp(`\\b${word}\\b`, 'i');
+    return regex.test(msgLower);
+  });
+  return foundWords.length >= 1 ? 'id' : 'en';
+}
+
+function buildSystemPrompt(lang, gender) {
+  const langInstruction = lang === 'id'
+    ? 'DETECTED LANGUAGE: Indonesian. You MUST reply in INDONESIAN (Bahasa Indonesia) only. Do not use any English words.'
+    : 'DETECTED LANGUAGE: English. You MUST reply in ENGLISH only. Do not use any Indonesian words.';
+
+  const genderInstruction = gender
+    ? `User gender: ${gender === 'female'
+        ? 'FEMALE — prioritize women products'
+        : 'MALE — prioritize men products (Blazer Pria, Jaket Denim, Topi)'}`
+    : '';
+
+  // FIX: All context merged into ONE system message to avoid Groq multi-system conflicts
+  return `You are LuxArc AI Style Advisor — a warm, friendly personal stylist for LuxArc AI fashion platform.
+
+${langInstruction}
+${genderInstruction}
 
 LANGUAGE DETECTION — MOST IMPORTANT RULE:
 - Detect the language of the user's message automatically
-- If user writes in Indonesian (contains words like: aku, saya, kamu, mau, yang, dan, ke, ini, itu, tidak, bisa, untuk, dengan, ada, apa, ya, dong, deh, nih, gaun, baju, pakai, pesta, cocok, bagus) → reply in INDONESIAN ONLY
+- If user writes in Indonesian → reply in INDONESIAN ONLY
 - If user writes in English → reply in ENGLISH ONLY
 - NEVER mix languages — this is critical
 - When in doubt → use Indonesian as default
@@ -105,15 +141,7 @@ PRODUCT RECOMMENDATION FORMAT:
 - Format exactly like this (at the very end of your message):
 
 [PRODUCTS]
-{
-  "products": [
-    {
-      "name": "exact product name from catalog",
-      "price": "Rp 000.000",
-      "reason": "short reason why this suits them (1 sentence)"
-    }
-  ]
-}
+{"products":[{"name":"exact product name from catalog","price":"Rp 000.000","reason":"short reason why this suits them (1 sentence)"}]}
 [/PRODUCTS]
 
 - Only include this JSON block when recommending products
@@ -121,26 +149,6 @@ PRODUCT RECOMMENDATION FORMAT:
 - Maximum 2 products in the JSON block
 
 ${LUXARC_PRODUCTS}`;
-
-// Language detection function
-function detectLanguage(message) {
-  const indonesianWords = [
-    'aku', 'saya', 'kamu', 'yang', 'dan', 'di', 'ke', 'ini', 'itu',
-    'mau', 'tidak', 'bisa', 'untuk', 'dengan', 'ada', 'apa', 'ya',
-    'dong', 'deh', 'nih', 'loh', 'banget', 'gaun', 'baju', 'pakai',
-    'pesta', 'cocok', 'bagus', 'gimana', 'boleh', 'perlu', 'butuh',
-    'ingin', 'pengen', 'coba', 'lihat', 'pilih', 'suka', 'harga',
-    'murah', 'mahal', 'warna', 'ukuran', 'pas', 'sesuai', 'acara',
-    'kondangan', 'kerja', 'santai', 'formal', 'casual', 'hari', 'malam',
-    'pagi', 'cantik', 'keren', 'bagaimana', 'kalau', 'jika', 'atau',
-    'tapi', 'karena', 'jadi', 'sudah', 'belum', 'sedang', 'akan'
-  ];
-  const msgLower = message.toLowerCase();
-  const foundWords = indonesianWords.filter(word => {
-    const regex = new RegExp(`\\b${word}\\b`, 'i');
-    return regex.test(msgLower);
-  });
-  return foundWords.length >= 1 ? 'id' : 'en';
 }
 
 export default async function handler(req, res) {
@@ -168,24 +176,14 @@ export default async function handler(req, res) {
 
   // Auto detect language
   const lang = detectLanguage(message);
-  const langInstruction = lang === 'id'
-    ? 'DETECTED LANGUAGE: Indonesian. You MUST reply in INDONESIAN (Bahasa Indonesia) only. Do not use any English words.'
-    : 'DETECTED LANGUAGE: English. You MUST reply in ENGLISH only. Do not use any Indonesian words.';
 
   try {
+    // FIX: Only ONE system message — no more multi-system conflict
     const messages = [
-      { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'system', content: langInstruction },
+      { role: 'system', content: buildSystemPrompt(lang, gender) },
     ];
 
-    if (gender) {
-      messages.push({
-        role: 'system',
-        content: `User gender: ${gender === 'female' ? 'FEMALE — prioritize women products' : 'MALE — prioritize men products (Blazer Pria, Jaket Denim, Topi)'}`
-      });
-    }
-
-    // Include recent chat history
+    // Include recent chat history (last 6 messages)
     const recentHistory = history.slice(-6);
     for (const h of recentHistory) {
       if (h.role && h.text) {
@@ -208,43 +206,63 @@ export default async function handler(req, res) {
         model: 'llama-3.3-70b-versatile',
         messages,
         temperature: 0.75,
-        max_tokens: 500,
+        max_tokens: 1024,  // FIX: was 500 — too small, reply got cut off mid-response
         top_p: 0.9,
       }),
     });
 
     const groqData = await groqRes.json();
 
+    // FIX: Log full Groq error for easier Vercel debugging
     if (!groqRes.ok) {
+      console.error('Groq API error:', JSON.stringify(groqData));
       return res.status(groqRes.status).json({
         error: groqData?.error?.message || 'Groq API error',
+        detail: groqData,
       });
     }
 
-    let replyText = groqData?.choices?.[0]?.message?.content || 'Maaf, coba lagi ya! ✨';
+    let replyText = groqData?.choices?.[0]?.message?.content || '';
+
+    // FIX: Fallback message if Groq returns empty content
+    if (!replyText || replyText.trim() === '') {
+      const fallback = lang === 'id'
+        ? 'Maaf, aku lagi gangguan sebentar. Coba tanya lagi ya! ✨'
+        : 'Sorry, something went wrong. Please try again! ✨';
+      return res.status(200).json({
+        success: true,
+        reply: fallback,
+        products: [],
+        lang,
+      });
+    }
 
     // Parse product recommendations from reply
     let products = [];
     const productMatch = replyText.match(/\[PRODUCTS\]([\s\S]*?)\[\/PRODUCTS\]/);
     if (productMatch) {
       try {
-        const parsed = JSON.parse(productMatch[1].trim());
+        // FIX: Strip markdown code fences if model wraps JSON in ```
+        const raw = productMatch[1].trim().replace(/^```json|^```|```$/gm, '').trim();
+        const parsed = JSON.parse(raw);
         products = parsed.products || [];
       } catch (e) {
+        console.error('Product JSON parse error:', e.message);
         products = [];
       }
-      // Remove the JSON block from the reply text
+      // Remove the JSON block from the reply text shown to user
       replyText = replyText.replace(/\[PRODUCTS\][\s\S]*?\[\/PRODUCTS\]/, '').trim();
     }
 
     return res.status(200).json({
       success: true,
       reply: replyText,
-      products: products,
-      lang: lang,
+      products,
+      lang,
     });
 
   } catch (err) {
+    console.error('Handler error:', err);
     return res.status(500).json({ error: err.message || 'Server error' });
   }
 }
