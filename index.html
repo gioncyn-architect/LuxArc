@@ -482,7 +482,23 @@
         </div>
       </div>
     </div>
-
+<!-- ===== BANNER ANALISIS KULIT ===== -->
+<div id="skincare-analysis-banner" style="display:none;margin:0 0 12px;padding:16px;
+  background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(255,215,0,0.05));
+  border:1.5px solid rgba(255,215,0,0.3);border-radius:16px;">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+    <span style="font-size:1.8em;">🔬</span>
+    <div>
+      <p style="color:#FFD700;font-weight:700;font-size:0.95em;margin:0;">Tidak tahu kulitmu butuh apa?</p>
+      <p style="color:#aaa;font-size:0.78em;margin:3px 0 0;">Biar AI yang analisis dan rekomendasikan produk terbaik!</p>
+    </div>
+  </div>
+  <button class="btn btn-gold shimmer-btn"
+    style="width:100%;padding:11px;font-size:0.88em;"
+    onclick="triggerSkincareAnalysis()">
+    🔬 Analisis Kulitku Sekarang
+  </button>
+</div>
     <!-- ===== SKINCARE JERAWAT ===== -->
     <div class="product-card" data-name="skincare jerawat" data-category="skincare" data-id="p13">
       <div class="product-img-wrap"><img src="skincare-jerawat.jpg" alt="Skincare Jerawat" id="img-skincare-jerawat"></div>
@@ -496,8 +512,8 @@
         <div class="product-price" data-price="195000"><span class="price-currency">Rp</span> <span class="price-val">195.000</span></div>
         <div class="actions">
           <div class="actions-row">
-            <button class="btn btn-ghost" onclick="analyzeSkincareYoucam('skincare-jerawat','Skincare Jerawat')">✨ Analisis Kulit</button>
-            <button class="btn btn-white" onclick="addToCart('Skincare Jerawat', 195000)">+ Keranjang</button>
+  <button class="btn btn-ghost" onclick="askAIAbaoutProduct('Skincare Jerawat')">🔬 Detail Produk</button>
+  <button class="btn btn-white" onclick="addToCart('Skincare Jerawat', 195000)">+ Keranjang</button>
           </div>
           <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Skincare Jerawat')">🤖 Minta Saran AI</button>
         </div>
@@ -517,9 +533,9 @@
         <div class="product-price" data-price="215000"><span class="price-currency">Rp</span> <span class="price-val">215.000</span></div>
         <div class="actions">
           <div class="actions-row">
-            <button class="btn btn-ghost" onclick="analyzeSkincareYoucam('skincare-pemutih','Skincare Pemutih')">✨ Analisis Kulit</button>
-            <button class="btn btn-white" onclick="addToCart('Skincare Pemutih', 215000)">+ Keranjang</button>
-          </div>
+  <button class="btn btn-ghost" onclick="askAIAbaoutProduct('Skincare Pemutih')">🔬 Detail Produk</button>
+  <button class="btn btn-white" onclick="addToCart('Skincare Pemutih', 215000)">+ Keranjang</button>
+</div>
           <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Skincare Pemutih')">🤖 Minta Saran AI</button>
         </div>
       </div>
@@ -537,9 +553,9 @@
     <div class="product-price" data-price="165000"><span class="price-currency">Rp</span> <span class="price-val">165.000</span></div>
     <div class="actions">
       <div class="actions-row">
-        <button class="btn btn-ghost" onclick="analyzeSkincareYoucam('serum-niacinamide','Serum Niacinamide')">✨ Analisis Kulit</button>
-        <button class="btn btn-white" onclick="addToCart('Serum Niacinamide', 165000)">+ Keranjang</button>
-      </div>
+  <button class="btn btn-ghost" onclick="askAIAbaoutProduct('Serum Niacinamide')">🔬 Detail Produk</button>
+  <button class="btn btn-white" onclick="addToCart('Serum Niacinamide', 165000)">+ Keranjang</button>
+</div>
       <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Serum Niacinamide')">🤖 Minta Saran AI</button>
     </div>
   </div>
@@ -558,9 +574,9 @@
     <div class="product-price" data-price="125000"><span class="price-currency">Rp</span> <span class="price-val">125.000</span></div>
     <div class="actions">
       <div class="actions-row">
-        <button class="btn btn-ghost" onclick="analyzeSkincareYoucam('sunscreen-spf50','Sunscreen SPF 50')">✨ Analisis Kulit</button>
-        <button class="btn btn-white" onclick="addToCart('Sunscreen SPF 50', 125000)">+ Keranjang</button>
-      </div>
+  <button class="btn btn-ghost" onclick="askAIAbaoutProduct('Sunscreen SPF 50')">🔬 Detail Produk</button>
+  <button class="btn btn-white" onclick="addToCart('Sunscreen SPF 50', 125000)">+ Keranjang</button>
+</div>
       <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Sunscreen SPF 50')">🤖 Minta Saran AI</button>
     </div>
   </div>
@@ -579,9 +595,9 @@
     <div class="product-price" data-price="175000"><span class="price-currency">Rp</span> <span class="price-val">175.000</span></div>
     <div class="actions">
       <div class="actions-row">
-        <button class="btn btn-ghost" onclick="analyzeSkincareYoucam('moisturizer-gel','Moisturizer Gel')">✨ Analisis Kulit</button>
-        <button class="btn btn-white" onclick="addToCart('Moisturizer Gel', 175000)">+ Keranjang</button>
-      </div>
+  <button class="btn btn-ghost" onclick="askAIAbaoutProduct('Moisturizer Gel')">🔬 Detail Produk</button>
+  <button class="btn btn-white" onclick="addToCart('Moisturizer Gel', 175000)">+ Keranjang</button>
+</div>
       <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Moisturizer Gel')">🤖 Minta Saran AI</button>
     </div>
   </div>
@@ -600,9 +616,9 @@
     <div class="product-price" data-price="145000"><span class="price-currency">Rp</span> <span class="price-val">145.000</span></div>
     <div class="actions">
       <div class="actions-row">
-        <button class="btn btn-ghost" onclick="analyzeSkincareYoucam('toner-aha-bha','Toner AHA BHA')">✨ Analisis Kulit</button>
-        <button class="btn btn-white" onclick="addToCart('Toner AHA BHA', 145000)">+ Keranjang</button>
-      </div>
+  <button class="btn btn-ghost" onclick="askAIAbaoutProduct('Toner AHA BHA')">🔬 Detail Produk</button>
+  <button class="btn btn-white" onclick="addToCart('Toner AHA BHA', 145000)">+ Keranjang</button>
+</div>
       <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Toner AHA BHA')">🤖 Minta Saran AI</button>
     </div>
   </div>
@@ -621,9 +637,9 @@
     <div class="product-price" data-price="95000"><span class="price-currency">Rp</span> <span class="price-val">95.000</span></div>
     <div class="actions">
       <div class="actions-row">
-        <button class="btn btn-ghost" onclick="analyzeSkincareYoucam('clay-mask','Clay Mask')">✨ Analisis Kulit</button>
-        <button class="btn btn-white" onclick="addToCart('Clay Mask', 95000)">+ Keranjang</button>
-      </div>
+  <button class="btn btn-ghost" onclick="askAIAbaoutProduct('Clay Mask')">🔬 Detail Produk</button>
+  <button class="btn btn-white" onclick="addToCart('Clay Mask', 95000)">+ Keranjang</button>
+</div>
       <button class="btn btn-gold shimmer-btn" onclick="askAIAbaoutProduct('Clay Mask')">🤖 Minta Saran AI</button>
     </div>
   </div>
