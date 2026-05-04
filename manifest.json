@@ -1,113 +1,80 @@
 {
   "name": "LuxArc AI — Professional Suite",
   "short_name": "LuxArc AI",
-  "description": "AI Style Advisor · Smart Inventory · Business Intelligence for Fashion & Beauty",
-  "start_url": "/index.html",
-  "scope": "/",
+  "description": "AI Style Advisor · Smart Inventory · Business Intelligence",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "dir": "ltr",
-  "lang": "id-ID",
+  "orientation": "portrait",
   "background_color": "#0a0a0a",
-  "theme_color": "#FFD700",
-  "categories": ["shopping", "productivity", "business"],
+  "theme_color": "#0a0a0a",
+  "lang": "id",
+  "categories": ["shopping", "lifestyle", "business"],
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "maskable any"
     },
     {
-      "src": "icon-512.png",
+      "src": "icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-maskable-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "1000027250.jpg",
-      "sizes": "540x720",
-      "type": "image/jpeg",
-      "form_factor": "narrow",
-      "label": "LuxArc Home Screen"
-    },
-    {
-      "src": "dress-pelangi.jpg",
-      "sizes": "540x720",
-      "type": "image/jpeg",
-      "form_factor": "narrow",
-      "label": "Virtual Try-On"
+      "purpose": "maskable any"
     }
   ],
   "shortcuts": [
     {
-      "name": "Virtual Try-On",
-      "short_name": "Try-On",
-      "description": "Coba pakaian dengan AI secara virtual",
-      "url": "index.html?page=ai",
-      "icons": [
-        {
-          "src": "icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
+      "name": "AI Advisor",
+      "short_name": "AI Chat",
+      "description": "Buka AI Style Advisor",
+      "url": "./index.html",
+      "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]
     },
     {
-      "name": "Hair Color",
-      "short_name": "Hair",
-      "description": "Preview warna rambut dengan AI",
-      "url": "index.html?page=ai&feature=hair",
-      "icons": [
-        {
-          "src": "icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
-    },
-    {
-      "name": "Keranjang",
-      "short_name": "Cart",
-      "description": "Lihat keranjang belanja Anda",
-      "url": "index.html?page=keranjang",
-      "icons": [
-        {
-          "src": "icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
+      "name": "Keranjang Belanja",
+      "short_name": "Keranjang",
+      "description": "Lihat keranjang belanja",
+      "url": "./index.html",
+      "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]
     }
   ],
-  "share_target": {
-    "action": "share",
-    "method": "POST",
-    "enctype": "multipart/form-data",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url",
-      "files": [
-        {
-          "name": "media",
-          "accept": ["image/*"]
-        }
-      ]
-    }
-  }
+  "prefer_related_applications": false
 }
