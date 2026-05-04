@@ -1837,14 +1837,12 @@ function closeSettingsDrawer() {
 
 function setLanguage(lang) {
     currentLang = lang;
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (translations[currentLang][key]) el.innerHTML = translations[currentLang][key];
-    });
-    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-        const key = el.getAttribute('data-i18n-placeholder');
-        if (translations[currentLang][key]) el.placeholder = translations[currentLang][key];
-    });
+
+    // ── Auto switch currency ──────────────────────────────
+    if (lang === 'en') setCurrency('USD');
+    else setCurrency('IDR');
+
+    // ── Update tombol bahasa di drawer ────────────────────
     const idBtn = document.getElementById('lang-id-btn');
     const enBtn = document.getElementById('lang-en-btn');
     if (idBtn) {
@@ -1856,6 +1854,264 @@ function setLanguage(lang) {
         enBtn.style.borderColor = lang === 'en' ? '#FFD700' : 'rgba(255,255,255,0.15)';
         enBtn.style.color = lang === 'en' ? '#FFD700' : '#aaa';
         enBtn.style.background = lang === 'en' ? 'rgba(255,215,0,0.12)' : 'transparent';
+    }
+
+    // ── Terjemahan lengkap ────────────────────────────────
+    const t = {
+        id: {
+            // Hero
+            heroLabel: 'Exclusive Business Suite',
+            heroSub: 'AI Style Advisor · Smart Inventory · Business Intelligence',
+            statCol: 'Koleksi', statStock: 'Stok',
+
+            // Search & Filter
+            searchPlaceholder: "Tanya AI: 'Rok pesta malam'...",
+            catAll: 'Semua Koleksi', catClothes: 'Pakaian',
+            secTitle: 'Koleksi Terpilih',
+
+            // Tombol produk
+            btnTryLive: '✨ Coba Live',
+            btnAddCart: '+ Keranjang',
+            btnAskAI: '🤖 Minta Saran AI',
+            btnTryMakeup: '💄 Coba Makeup',
+            btnTryHat: '🎩 Coba AI',
+            btnSkinAnalysis: '✨ Analisis Kulit',
+            btnTryHair: '💇 Coba Warna Rambut dengan AI',
+
+            // Nav
+            navHome: 'Beranda', navAI: 'AI Advisor',
+
+            // Cart
+            cartTitle: 'Keranjang Belanja',
+            cartEmpty: 'Keranjang Kosong',
+            cartEmptySub: 'Tambahkan produk dari halaman Beranda',
+            cartShopNow: 'Belanja Sekarang',
+            cartSubtotal: 'Subtotal',
+            cartDiscount: 'Diskon Voucher',
+            cartTotal: 'Total Tagihan',
+            cartVA: 'Transfer Virtual Account',
+            cartPay: '✓ Selesai Bayar',
+            cartItemCount: 'item',
+
+            // Voucher
+            voucherTitle: '🏷️ Voucher & Promo',
+            voucherInput: 'Masukkan kode voucher...',
+            voucherApply: 'Pakai',
+            orderSummary: '📋 Ringkasan Pesanan',
+
+            // AI Advisor
+            aiGreeting: 'Halo <b>Vivi!</b> 👋 Saya <b>LuxArc AI</b> — asisten gaya personalmu.<br>Apa yang bisa saya bantu hari ini?',
+            btnAutoDetect: '📷 Deteksi Otomatis',
+            chatInput: 'Tanya AI...',
+            qrMakeup: '💄 Rekomendasi Makeup',
+            qrHair: '🎨 Coba Warna Cat Rambut',
+            qrFashion: '👗 Cari Pakaian & Perhiasan',
+            qrSkin: '🔬 Analisis Kulit Saya',
+            qrFree: '💬 Tanya Bebas',
+
+            // Settings
+            settingsTitle: '⚙️ Settings',
+            langLabel: '🌐 Bahasa',
+            currLabel: '💱 Tampilan Harga',
+            voucherActive: '🏷️ Voucher Aktif',
+            noVoucher: 'Belum ada voucher aktif. Pilih kode di bawah:',
+            btnDashboard: '📊 Business Dashboard',
+            btnShare: '🎁 Share & Diskon',
+
+            // Toast
+            toastCart: 'masuk ke keranjang!',
+            toastPay: 'Pembayaran Berhasil! 🎉',
+            toastCamFlip: '🔄 Memutar kamera...',
+            toastCamErr: 'Gagal membuka kamera!',
+        },
+        en: {
+            // Hero
+            heroLabel: 'Exclusive Business Suite',
+            heroSub: 'AI Style Advisor · Smart Inventory · Business Intelligence',
+            statCol: 'Collections', statStock: 'Stock',
+
+            // Search & Filter
+            searchPlaceholder: "Ask AI: 'Evening party dress'...",
+            catAll: 'All Collections', catClothes: 'Apparel',
+            secTitle: 'Curated Picks',
+
+            // Tombol produk
+            btnTryLive: '✨ Try Live',
+            btnAddCart: '+ Add to Cart',
+            btnAskAI: '🤖 Ask AI',
+            btnTryMakeup: '💄 Try Makeup',
+            btnTryHat: '🎩 Try AI',
+            btnSkinAnalysis: '✨ Skin Analysis',
+            btnTryHair: '💇 Try Hair Color with AI',
+
+            // Nav
+            navHome: 'Home', navAI: 'AI Advisor',
+
+            // Cart
+            cartTitle: 'Shopping Cart',
+            cartEmpty: 'Cart is Empty',
+            cartEmptySub: 'Add products from the Home page',
+            cartShopNow: 'Shop Now',
+            cartSubtotal: 'Subtotal',
+            cartDiscount: 'Voucher Discount',
+            cartTotal: 'Total Bill',
+            cartVA: 'Virtual Account Transfer',
+            cartPay: '✓ Complete Payment',
+            cartItemCount: 'items',
+
+            // Voucher
+            voucherTitle: '🏷️ Voucher & Promo',
+            voucherInput: 'Enter voucher code...',
+            voucherApply: 'Apply',
+            orderSummary: '📋 Order Summary',
+
+            // AI Advisor
+            aiGreeting: 'Hello <b>Vivi!</b> 👋 I am <b>LuxArc AI</b> — your personal style assistant.<br>How can I help you today?',
+            btnAutoDetect: '📷 Auto Detect',
+            chatInput: 'Ask AI...',
+            qrMakeup: '💄 Makeup Recommendations',
+            qrHair: '🎨 Try Hair Color',
+            qrFashion: '👗 Find Clothes & Jewelry',
+            qrSkin: '🔬 Analyze My Skin',
+            qrFree: '💬 Ask Freely',
+
+            // Settings
+            settingsTitle: '⚙️ Settings',
+            langLabel: '🌐 Language',
+            currLabel: '💱 Price Display',
+            voucherActive: '🏷️ Active Voucher',
+            noVoucher: 'No active voucher. Choose a code below:',
+            btnDashboard: '📊 Business Dashboard',
+            btnShare: '🎁 Share & Discount',
+
+            // Toast
+            toastCart: 'added to cart!',
+            toastPay: 'Payment Successful! 🎉',
+            toastCamFlip: '🔄 Flipping camera...',
+            toastCamErr: 'Camera access failed!',
+        }
+    };
+
+    const T = t[lang];
+
+    // ── Update translations object (untuk toast dll) ───────
+    if (translations[lang]) {
+        translations[lang].toastCart = T.toastCart;
+        translations[lang].toastPay = T.toastPay;
+        translations[lang].toastCamFlip = T.toastCamFlip;
+        translations[lang].toastCamErr = T.toastCamErr;
+    }
+
+    // ── Hero ───────────────────────────────────────────────
+    const heroSub = document.querySelector('.hero-sub');
+    if (heroSub) heroSub.textContent = T.heroSub;
+    const heroLabel = document.querySelector('.hero-label');
+    if (heroLabel) heroLabel.textContent = T.heroLabel;
+
+    // ── Stats ──────────────────────────────────────────────
+    document.querySelectorAll('[data-i18n="statCol"]').forEach(el => el.textContent = T.statCol);
+    document.querySelectorAll('[data-i18n="statStock"]').forEach(el => el.textContent = T.statStock);
+
+    // ── Search ─────────────────────────────────────────────
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.placeholder = T.searchPlaceholder;
+
+    // ── Category buttons ───────────────────────────────────
+    const catAll = document.querySelector('[onclick*="semua"]');
+    if (catAll) catAll.textContent = T.catAll;
+    const catClothes = document.querySelector('[onclick*="pakaian"]');
+    if (catClothes) catClothes.textContent = T.catClothes;
+
+    // ── Section title ──────────────────────────────────────
+    const secTitle = document.querySelector('.section-title');
+    if (secTitle) secTitle.textContent = T.secTitle;
+
+    // ── Semua tombol produk ────────────────────────────────
+    document.querySelectorAll('.product-card').forEach(card => {
+        const btns = card.querySelectorAll('.btn');
+        btns.forEach(btn => {
+            const txt = btn.textContent.trim();
+            if (txt.includes('Coba Live') || txt.includes('Try Live'))
+                btn.textContent = T.btnTryLive;
+            else if (txt.includes('Keranjang') || txt.includes('Add to Cart'))
+                btn.textContent = T.btnAddCart;
+            else if (txt.includes('Minta Saran AI') || txt.includes('Ask AI'))
+                btn.textContent = T.btnAskAI;
+            else if (txt.includes('Coba Makeup') || txt.includes('Try Makeup'))
+                btn.textContent = T.btnTryMakeup;
+            else if (txt.includes('Coba AI') || txt.includes('Try AI'))
+                btn.textContent = T.btnTryHat;
+            else if (txt.includes('Analisis Kulit') || txt.includes('Skin Analysis'))
+                btn.textContent = T.btnSkinAnalysis;
+        });
+
+        // Tombol try hair
+        const hairBtn = card.querySelector('.btn-try-hair');
+        if (hairBtn && (hairBtn.textContent.includes('Coba Warna') || hairBtn.textContent.includes('Try Hair'))) {
+            hairBtn.textContent = T.btnTryHair;
+        }
+    });
+
+    // ── Bottom nav ─────────────────────────────────────────
+    const navHome = document.querySelector('#nav-beranda span:last-child');
+    if (navHome) navHome.textContent = T.navHome;
+    const navAI = document.querySelector('#nav-ai span:last-child');
+    if (navAI) navAI.textContent = T.navAI;
+
+    // ── Cart page ──────────────────────────────────────────
+    const cartTitle = document.querySelector('.cart-page-title');
+    if (cartTitle) cartTitle.innerHTML = lang === 'id'
+        ? 'Keranjang <span>Belanja</span>'
+        : 'Shopping <span>Cart</span>';
+
+    const cartEmpty = document.querySelector('.cart-empty-title');
+    if (cartEmpty) cartEmpty.textContent = T.cartEmpty;
+    const cartEmptySub = document.querySelector('.cart-empty-sub');
+    if (cartEmptySub) cartEmptySub.textContent = T.cartEmptySub;
+    const cartShopNow = document.querySelector('.cart-empty-state .btn-gold');
+    if (cartShopNow) cartShopNow.textContent = T.cartShopNow;
+
+    const cartVoucherTitle = document.querySelector('.cart-voucher-section .cart-section-label');
+    if (cartVoucherTitle) cartVoucherTitle.innerHTML = T.voucherTitle;
+    const voucherInput = document.getElementById('cart-page-promo-input');
+    if (voucherInput) voucherInput.placeholder = T.voucherInput;
+    const voucherApply = document.querySelector('.voucher-apply-btn');
+    if (voucherApply) voucherApply.textContent = T.voucherApply;
+
+    const orderSummary = document.querySelector('.cart-summary-section .cart-section-label');
+    if (orderSummary) orderSummary.innerHTML = T.orderSummary;
+    const cartVA = document.querySelector('.cart-va-label');
+    if (cartVA) cartVA.textContent = T.cartVA;
+    const cartPay = document.querySelector('.cart-summary-section .btn-gold');
+    if (cartPay) cartPay.textContent = T.cartPay;
+
+    // ── AI Advisor page ────────────────────────────────────
+    const aiGreeting = document.getElementById('ai-greeting-msg');
+    if (aiGreeting) aiGreeting.innerHTML = T.aiGreeting;
+    const btnAutoDetect = document.querySelector('.btn-scan');
+    if (btnAutoDetect) btnAutoDetect.textContent = T.btnAutoDetect;
+    const chatInput = document.getElementById('chat-input');
+    if (chatInput) chatInput.placeholder = T.chatInput;
+
+    const quickBtns = document.querySelectorAll('.ai-quick-btn');
+    const qrKeys = ['qrMakeup','qrHair','qrFashion','qrSkin','qrFree'];
+    quickBtns.forEach((btn, i) => {
+        if (qrKeys[i]) btn.textContent = T[qrKeys[i]];
+    });
+
+    // ── Settings drawer ────────────────────────────────────
+    const noVoucher = document.getElementById('drawer-voucher-status');
+    if (noVoucher && !activePromoCode) noVoucher.innerHTML =
+        `<span style="color:#555;">${T.noVoucher}</span>`;
+
+    const btnDash = document.querySelector('[onclick*="openAdmin"]');
+    if (btnDash) btnDash.textContent = T.btnDashboard;
+    const btnShare = document.querySelector('[onclick*="openShareDiscount"]');
+    if (btnShare) btnShare.textContent = T.btnShare;
+
+    // ── Render ulang cart jika sedang di halaman keranjang ─
+    if (document.getElementById('page-keranjang')?.classList.contains('active')) {
+        renderCartPage();
     }
 }
 
