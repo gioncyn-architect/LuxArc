@@ -2002,18 +2002,31 @@ function setLanguage(lang) {
     if (lang === 'en') setCurrency('USD');
     else setCurrency('IDR');
 
-    // ── Update tombol bahasa di drawer ────────────────────
+    // ── Update tombol bahasa di drawer (PERBAIKAN) ────────────────────
     const idBtn = document.getElementById('lang-id-btn');
     const enBtn = document.getElementById('lang-en-btn');
-    if (idBtn) {
-        idBtn.style.borderColor = lang === 'id' ? '#FFD700' : 'rgba(255,255,255,0.15)';
-        idBtn.style.color = lang === 'id' ? '#FFD700' : '#aaa';
-        idBtn.style.background = lang === 'id' ? 'rgba(255,215,0,0.12)' : 'transparent';
-    }
-    if (enBtn) {
-        enBtn.style.borderColor = lang === 'en' ? '#FFD700' : 'rgba(255,255,255,0.15)';
-        enBtn.style.color = lang === 'en' ? '#FFD700' : '#aaa';
-        enBtn.style.background = lang === 'en' ? 'rgba(255,215,0,0.12)' : 'transparent';
+    
+    if (idBtn && enBtn) {
+        // Clear semua button dulu
+        [idBtn, enBtn].forEach(btn => {
+            btn.style.borderColor = 'rgba(255,255,255,0.15)';
+            btn.style.color = '#aaa';
+            btn.style.background = 'transparent';
+            btn.classList.remove('active');
+        });
+        
+        // Set button yang aktif
+        if (lang === 'id') {
+            idBtn.style.borderColor = '#FFD700';
+            idBtn.style.color = '#FFD700';
+            idBtn.style.background = 'rgba(255,215,0,0.12)';
+            idBtn.classList.add('active');
+        } else {
+            enBtn.style.borderColor = '#FFD700';
+            enBtn.style.color = '#FFD700';
+            enBtn.style.background = 'rgba(255,215,0,0.12)';
+            enBtn.classList.add('active');
+        }
     }
 
     // ── Terjemahan lengkap ────────────────────────────────
@@ -2268,10 +2281,17 @@ function setLanguage(lang) {
     if (btnDash) btnDash.textContent = T.btnDashboard;
     const btnShare = document.querySelector('[onclick*="openShareDiscount"]');
     if (btnShare) btnShare.textContent = T.btnShare;
-
     // ── Render ulang cart jika sedang di halaman keranjang ─
     if (document.getElementById('page-keranjang')?.classList.contains('active')) {
         renderCartPage();
+    }
+    
+    // ── Tutup settings drawer setelah ganti bahasa ──────────
+    setTimeout(() => {
+        closeSettingsDrawer();
+    }, 200);
+}
+    
     }
 }
 
