@@ -1017,26 +1017,7 @@ function renderAIProductCards(products) {
         chatHistory.scrollTop = chatHistory.scrollHeight;
     });
 }
-        });
-        const card = document.createElement('div');
-        card.className = 'ai-product-rec';
-        card.innerHTML = `
-            ${imgSrc
-                ? `<img src="${imgSrc}" alt="${product.name}">`
-                : `<span style="font-size:2em;">🛍️</span>`}
-            <div class="ai-product-rec-info">
-                <div class="ai-product-rec-name">${product.name}</div>
-                <div class="ai-product-rec-desc">${product.reason || ''}</div>
-                <div style="color:#FFD700;font-size:0.82em;font-weight:700;margin-bottom:6px;">${product.price}</div>
-                <div style="display:flex;gap:6px;">
-                    <button class="ai-product-rec-btn" onclick="addToCart('${product.name}', ${dataPrice})">🛒 + Keranjang</button>
-                    <button class="ai-product-rec-btn" onclick="askAIAbaoutProduct('${product.name}')">🤖 Detail</button>
-                </div>
-            </div>`;
-        chatHistory.appendChild(card);
-        chatHistory.scrollTop = chatHistory.scrollHeight;
-    });
-}
+        
 function askAIAbaoutProduct(productName) {
     switchPage('ai');
     setTimeout(() => {
