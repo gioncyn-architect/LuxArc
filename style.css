@@ -518,9 +518,9 @@ button[onclick*="toggleLang"],
    HARGA — proporsional untuk 2 kolom
    ===================================================== */
 .product-price {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'DM sans',sans-serif;
   font-size: 1.1rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--gold);
   line-height: 1.1;
   letter-spacing: 0.01em;
@@ -541,7 +541,7 @@ button[onclick*="toggleLang"],
 
 .price-val {
   font-size: 1em;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.01em;
 }
 
