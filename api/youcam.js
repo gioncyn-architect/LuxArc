@@ -7,6 +7,7 @@ const BASE_URL = 'https://yce-api-01.makeupar.com';
 
 export const config = {
   api: { bodyParser: { sizeLimit: '10mb' } },
+  maxDuration: 60,
 };
 
 const HAIRSTYLE_TEMPLATE_MAP = {
