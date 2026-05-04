@@ -617,7 +617,29 @@ button[onclick*="toggleLang"],
   0%, 100% { box-shadow: 0 0 8px rgba(255,215,0,0.15); }
   50% { box-shadow: 0 0 18px rgba(255,215,0,0.35); }
 }
+.btn-white.btn-cart {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--white);
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
 
+.btn-white.btn-cart:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.btn-white.btn-cart:active {
+  transform: scale(0.93);
+}
+
+.btn-white.btn-cart.added {
+  background: rgba(46, 204, 113, 0.15);
+  border-color: rgba(46, 204, 113, 0.5);
+  color: #2ecc71;
+}
 .btn-ghost:hover {
   background: var(--gold-dim);
   border-color: var(--gold);
