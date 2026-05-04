@@ -518,10 +518,11 @@ button[onclick*="toggleLang"],
    HARGA — proporsional untuk 2 kolom
    ===================================================== */
 .product-price {
-  font-family: 'DM Sans',sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1rem;
   font-weight: 700;
   color: var(--gold);
+  font-style: normal !important;
   line-height: 1.1;
   letter-spacing: 0;
   display: flex;
@@ -530,21 +531,20 @@ button[onclick*="toggleLang"],
 }
 
 .price-currency {
+  font-family: 'DM Sans', sans-serif;
   font-size: 0.65em;
   font-weight: 700;
+  font-style: normal !important;
   margin-right: 1px;
   opacity: 0.9;
-  font-style: normal;
-  -webkit-locale: "id";
-  unicode-bidi: plaintext;
 }
 
 .price-val {
-   font-family: 'DM Sans', sans-serif;
-   font-style: normal;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1em;
   font-weight: 700;
-  letter-spacing: -0;
+  font-style: normal !important;
+  letter-spacing: 0;
 }
 
 /* ── Buttons ── */
