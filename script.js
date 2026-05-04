@@ -2220,3 +2220,22 @@ document.addEventListener('click', function(e) {
   btn.appendChild(circle);
   setTimeout(() => circle.remove(), 500);
 });
+// ── Auto add btn-live class ──
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.btn-ghost').forEach(btn => {
+    const text = btn.textContent.trim();
+    if (
+      text.includes('Coba Live') ||
+      text.includes('Try Live') ||
+      text.includes('Coba Makeup') ||
+      text.includes('Try Makeup') ||
+      text.includes('Coba AI') ||
+      text.includes('Try AI') ||
+      text.includes('Analisis Kulit') ||
+      text.includes('Skin Analysis') ||
+      text.includes('Coba Warna')
+    ) {
+      btn.classList.add('btn-live');
+    }
+  });
+});
