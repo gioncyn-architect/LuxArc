@@ -519,8 +519,8 @@ button[onclick*="toggleLang"],
    ===================================================== */
 .product-price {
   font-family: 'DM Sans',sans-serif;
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
   color: var(--gold);
   line-height: 1.1;
   letter-spacing: 0;
@@ -531,7 +531,7 @@ button[onclick*="toggleLang"],
 
 .price-currency {
   font-size: 0.65em;
-  font-weight: 600;
+  font-weight: 700;
   margin-right: 1px;
   opacity: 0.9;
   font-style: normal;
@@ -540,8 +540,10 @@ button[onclick*="toggleLang"],
 }
 
 .price-val {
+   font-family: 'DM Sans', sans-serif;
+   font-style: normal;
   font-size: 1em;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0;
 }
 
