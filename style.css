@@ -518,7 +518,7 @@ button[onclick*="toggleLang"],
    HARGA — proporsional untuk 2 kolom
    ===================================================== */
 .product-price {
-  font-family: 'DM sans',sans-serif;
+  font-family: 'DM Sans',sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--gold);
