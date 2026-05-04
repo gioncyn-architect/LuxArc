@@ -2198,3 +2198,25 @@ if ('serviceWorker' in navigator) {
 document.addEventListener('DOMContentLoaded', () => {
     syncCartBadge();
 });
+// ── Ripple effect ──
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.btn');
+  if (!btn) return;
+
+  const circle = document.createElement('span');
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  circle.style.cssText = `
+    position:absolute;
+    border-radius:50%;
+    background:rgba(255,255,255,0.25);
+    width:${size}px;height:${size}px;
+    left:${e.clientX - rect.left - size/2}px;
+    top:${e.clientY - rect.top - size/2}px;
+    transform:scale(0);
+    animation:ripple-anim 0.5s ease-out forwards;
+    pointer-events:none;
+  `;
+  btn.appendChild(circle);
+  setTimeout(() => circle.remove(), 500);
+});
