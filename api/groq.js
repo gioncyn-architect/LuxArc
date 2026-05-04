@@ -6,9 +6,9 @@ export const config = {
 };
 
 const LUXARC_PRODUCTS = `
-KATALOG PRODUK LUXARC AI:
+PRODUCT CATALOG LUXARC AI:
 
-PAKAIAN WANITA:
+WOMEN CLOTHING:
 - Blouse 2245 (Elegant Striped Top) - Rp 185.000
 - Blouse Valen Cream (Soft Cream Elegant) - Rp 175.000
 - Blouse Valen Hitam (Sleek Black) - Rp 175.000
@@ -29,7 +29,7 @@ PAKAIAN WANITA:
 - Atasan 09 (Halter Neck Satin) - Rp 168.000
 - Atasan 10 (Corset Style Bodice) - Rp 195.000
 
-DRESS WANITA:
+WOMEN DRESS:
 - Dress Pelangi (Rainbow Colorful) - Rp 195.000
 - Dress Kids Pita (Ribbon Kids Party) - Rp 145.000
 - Dress Biru (Ocean Blue Midi) - Rp 185.000
@@ -39,11 +39,11 @@ DRESS WANITA:
 - Dress 04 (Cocktail A-Line) - Rp 265.000
 - Dress 05 (Summer Sundress) - Rp 188.000
 
-PAKAIAN PRIA:
+MEN CLOTHING:
 - Blazer Pria (Smart Casual Blazer) - Rp 325.000
 - Jaket Denim (Classic Denim Jacket) - Rp 255.000
 
-TOPI:
+HATS:
 - Topi xx (Streetwear Cap) - Rp 85.000
 - Topi 01 (Bucket Hat Trendy) - Rp 95.000
 - Topi 02 (Baseball Cap Urban) - Rp 78.000
@@ -51,7 +51,7 @@ TOPI:
 - Topi 04 (Fedora Classic) - Rp 135.000
 - Topi 05 (French Beret Chic) - Rp 98.000
 
-PERHIASAN:
+JEWELRY:
 - Kalung Mutiara (Classic White Pearl) - Rp 350.000
 - Kalung Emas 211 (Pure Gold 24k) - Rp 2.500.000
 
@@ -68,14 +68,20 @@ SKINCARE:
 - Skincare Jerawat (Acne Clear Series) - Rp 195.000
 - Skincare Pemutih (Brightening & Glow) - Rp 215.000
 
-CAT RAMBUT:
+HAIR COLOR:
 - Cat Rambut Premium (AI Hair Color Try-On) - Rp 125.000
 `;
 
-const SYSTEM_PROMPT = `Kamu adalah LuxArc AI Style Advisor — personal stylist AI untuk platform fashion LuxArc AI.
+const SYSTEM_PROMPT = `You are LuxArc AI Style Advisor — a personal stylist AI for LuxArc AI fashion platform.
+
+LANGUAGE RULE — THIS IS THE MOST IMPORTANT RULE:
+- If user message is in English → YOU MUST reply in English ONLY
+- If user message is in Indonesian → reply in Indonesian ONLY
+- NEVER mix languages in your response
+- This rule OVERRIDES everything else
 
 IMPORTANT RULES — READ CAREFULLY:
-1. ALWAYS reply in the SAME language as the user. English → English. Indonesian → Indonesian.
+1. ALWAYS reply in the SAME language as the user
 2. Keep answers SHORT — maximum 2-3 sentences only
 3. Recommend MAXIMUM 2-3 most relevant products only
 4. Do not be lengthy, do not explain all products
@@ -86,11 +92,10 @@ IMPORTANT RULES — READ CAREFULLY:
 9. Stay on topic: fashion, beauty, and LuxArc products only
 10. If user wants to try product → direct to "Coba Live" or "Coba AI" button
 
-
-FORMAT JAWABAN:
-- 1-2 kalimat respons
-- Sebutkan 2-3 produk rekomendasi dengan harga
-- 1 kalimat ajakan action (coba, beli, tanya lagi)
+FORMAT:
+- 1-2 sentence response
+- List 2-3 product recommendations with price
+- 1 sentence call to action
 
 ${LUXARC_PRODUCTS}`;
 
@@ -100,12 +105,12 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method tidak diizinkan' });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const groqKey = process.env.GROQ_API_KEY;
   if (!groqKey) {
-    return res.status(500).json({ error: 'GROQ_API_KEY tidak ditemukan' });
+    return res.status(500).json({ error: 'GROQ_API_KEY not found' });
   }
 
   let body = req.body;
@@ -115,20 +120,27 @@ export default async function handler(req, res) {
   if (!body) body = {};
 
   const { message, history = [], gender = null } = body;
-  if (!message) return res.status(400).json({ error: 'message diperlukan' });
+  if (!message) return res.status(400).json({ error: 'message required' });
+
+  // Deteksi bahasa dari pesan user
+  const isEnglish = /[a-zA-Z]/.test(message) && !/[\u00C0-\u024F]/.test(message);
+  const langInstruction = isEnglish
+    ? 'The user is writing in ENGLISH. You MUST respond in ENGLISH only.'
+    : 'The user is writing in INDONESIAN. You MUST respond in INDONESIAN only.';
 
   try {
-    const messages = [{ role: 'system', content: SYSTEM_PROMPT }];
+    const messages = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: langInstruction },
+    ];
 
-    // Tambahkan konteks gender jika ada
     if (gender) {
       messages.push({
         role: 'system',
-        content: `Konteks: User adalah ${gender === 'female' ? 'WANITA' : 'PRIA'}. Rekomendasikan produk yang sesuai gender ini.`
+        content: `User gender: ${gender === 'female' ? 'FEMALE — recommend women products' : 'MALE — recommend men products'}`
       });
     }
 
-    // History percakapan (max 6 pesan terakhir saja)
     const recentHistory = history.slice(-6);
     for (const h of recentHistory) {
       if (h.role && h.text) {
@@ -151,7 +163,7 @@ export default async function handler(req, res) {
         model: 'llama-3.3-70b-versatile',
         messages,
         temperature: 0.7,
-        max_tokens: 300, // Dibatasi supaya jawaban singkat
+        max_tokens: 300,
         top_p: 0.9,
       }),
     });
@@ -166,11 +178,11 @@ export default async function handler(req, res) {
 
     const replyText =
       groqData?.choices?.[0]?.message?.content ||
-      'Maaf, coba lagi ya! ✨';
+      'Sorry, please try again! ✨';
 
     return res.status(200).json({ success: true, reply: replyText });
 
   } catch (err) {
-    return res.status(500).json({ error: err.message || 'Terjadi kesalahan server' });
+    return res.status(500).json({ error: err.message || 'Server error' });
   }
 }
