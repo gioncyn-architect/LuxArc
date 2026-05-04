@@ -1704,6 +1704,10 @@
   <button class="bnav-btn" id="nav-ai" onclick="switchPage('ai')">
     <span class="icon">🤖</span><span data-i18n="navAI">AI Advisor</span>
   </button>
+  <button class="bnav-btn" id="nav-kulit" onclick="switchPage('kulit')">
+  <span class="icon">🔬</span>
+  <span>Analisis Kulit</span>
+  </button>
   <button class="bnav-btn" id="nav-keranjang" onclick="switchPage('keranjang')">
     <span class="icon" style="position:relative;display:inline-block;">🛒<span class="bnav-cart-badge" id="bnav-cart-count">0</span></span>
     <span>Keranjang</span>
@@ -1897,6 +1901,77 @@
     if (typeof toast === 'function') toast('Kode promo dihapus.', 'info');
   }
 </script>
+<!-- ===== HALAMAN ANALISIS KULIT ===== -->
+<div id="page-kulit" class="page">
+  <div style="padding:16px 14px 120px;min-height:100vh;background:#0a0a0a;">
 
+    <div style="margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid rgba(255,215,0,0.12);">
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:1.7em;font-weight:700;color:#fff;margin:0 0 4px;">
+        Analisis <span style="color:#FFD700;font-style:italic;">Kulit</span>
+      </h2>
+      <p style="color:#666;font-size:0.82em;margin:0;">Powered by YouCam AI</p>
+    </div>
+
+    <div id="kulit-state-awal">
+      <div style="text-align:center;padding:30px 20px;background:linear-gradient(135deg,rgba(255,215,0,0.08),rgba(255,215,0,0.03));border:1.5px solid rgba(255,215,0,0.2);border-radius:20px;margin-bottom:20px;">
+        <div style="font-size:3em;margin-bottom:12px;">🔬</div>
+        <h3 style="color:#fff;font-size:1.1em;margin-bottom:8px;">Kenali Kondisi Kulitmu</h3>
+        <p style="color:#888;font-size:0.85em;line-height:1.6;margin-bottom:20px;">Upload foto wajahmu, AI akan menganalisis dan merekomendasikan produk yang tepat!</p>
+
+        <label style="display:block;width:100%;padding:14px;border-radius:14px;border:1.5px dashed rgba(255,215,0,0.4);background:transparent;color:#FFD700;font-size:0.9em;font-family:inherit;cursor:pointer;margin-bottom:10px;box-sizing:border-box;text-align:center;">
+          🖼️ Pilih Foto dari Galeri
+          <input type="file" accept="image/*" id="kulit-photo-input" style="display:none;" onchange="kulitPreviewPhoto(this)">
+        </label>
+
+        <button onclick="kulitBukaKamera()" style="width:100%;padding:14px;border-radius:14px;border:1.5px dashed rgba(255,255,255,0.2);background:transparent;color:#fff;font-size:0.9em;font-family:inherit;cursor:pointer;margin-bottom:16px;">
+          📷 Buka Kamera
+        </button>
+
+        <div id="kulit-preview-wrap" style="display:none;margin-bottom:16px;">
+          <img id="kulit-preview-img" style="width:100%;max-height:280px;object-fit:cover;border-radius:14px;border:2px solid rgba(255,215,0,0.3);">
+        </div>
+
+        <button id="kulit-btn-analisis" onclick="jalankanAnalisisKulit()" style="display:none;width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#FFD700,#e6c200);color:#000;font-size:0.95em;font-weight:700;font-family:inherit;cursor:pointer;">
+          🔬 Analisis Kulitku Sekarang
+        </button>
+      </div>
+    </div>
+
+    <div id="kulit-state-loading" style="display:none;text-align:center;padding:40px 20px;">
+      <div style="font-size:2.5em;margin-bottom:16px;">⏳</div>
+      <p style="color:#FFD700;font-size:1em;font-weight:600;">AI sedang menganalisis kulitmu...</p>
+      <p style="color:#666;font-size:0.82em;margin-top:6px;">Mohon tunggu 15–30 detik</p>
+      <div style="margin-top:20px;height:4px;background:#1a1a1a;border-radius:4px;overflow:hidden;">
+        <div id="kulit-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#FFD700,#fffae6);border-radius:4px;transition:width 25s linear;"></div>
+      </div>
+    </div>
+
+    <div id="kulit-state-hasil" style="display:none;">
+      <div id="kulit-skor-wrap" style="background:#111;border:1.5px solid rgba(255,215,0,0.2);border-radius:16px;padding:16px;margin-bottom:16px;">
+        <p style="color:#FFD700;font-weight:700;font-size:0.95em;margin-bottom:14px;">✅ Hasil Analisis Kulitmu:</p>
+        <div id="kulit-skor-content"></div>
+        <div style="margin-top:12px;padding:10px 14px;background:rgba(255,215,0,0.07);border-radius:10px;">
+          <p id="kulit-tipe-text" style="color:#FFD700;font-size:0.88em;font-weight:600;margin:0;"></p>
+        </div>
+      </div>
+
+      <p style="color:#FFD700;font-weight:700;font-size:0.95em;margin-bottom:12px;">🎯 Produk Rekomendasi:</p>
+      <div id="kulit-produk-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+      <button onclick="kulitReset()" style="width:100%;padding:12px;border-radius:14px;border:1.5px solid rgba(255,215,0,0.3);background:transparent;color:#FFD700;font-size:0.88em;font-family:inherit;cursor:pointer;margin-top:16px;">
+        🔄 Analisis Ulang
+      </button>
+    </div>
+
+    <div id="kulit-state-error" style="display:none;text-align:center;padding:30px 20px;">
+      <div style="font-size:2.5em;margin-bottom:12px;">❌</div>
+      <p id="kulit-error-msg" style="color:#ff4444;font-size:0.9em;margin-bottom:16px;"></p>
+      <button onclick="kulitReset()" style="padding:12px 28px;border-radius:12px;border:1.5px solid #ff4444;background:transparent;color:#ff4444;font-family:inherit;cursor:pointer;">
+        Coba Lagi
+      </button>
+    </div>
+
+  </div>
+</div>
 </body>
 </html>
