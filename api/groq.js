@@ -67,6 +67,12 @@ MAKEUP:
 SKINCARE:
 - Skincare Jerawat (Acne Clear Series) - Rp 195.000
 - Skincare Pemutih (Brightening & Glow) - Rp 215.000
+- Serum Niacinamide (Pore & Acne Control) - Rp 165.000
+- Sunscreen SPF 50 (Daily UV Protection) - Rp 125.000
+- Moisturizer Gel (Oil Control & Hydrating) - Rp 175.000
+- Toner AHA BHA (Exfoliating & Brightening) - Rp 145.000
+- Clay Mask (Deep Pore Cleansing) - Rp 95.000
+
 
 HAIR COLOR:
 - Cat Rambut Premium (AI Hair Color Try-On) - Rp 125.000
