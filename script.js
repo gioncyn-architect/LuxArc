@@ -2002,33 +2002,6 @@ function setLanguage(lang) {
     if (lang === 'en') setCurrency('USD');
     else setCurrency('IDR');
 
-    // ── Update tombol bahasa di drawer (PERBAIKAN) ────────────────────
-    const idBtn = document.getElementById('lang-id-btn');
-    const enBtn = document.getElementById('lang-en-btn');
-    
-    if (idBtn && enBtn) {
-        // Clear semua button dulu
-        [idBtn, enBtn].forEach(btn => {
-            btn.style.borderColor = 'rgba(255,255,255,0.15)';
-            btn.style.color = '#aaa';
-            btn.style.background = 'transparent';
-            btn.classList.remove('active');
-        });
-        
-        // Set button yang aktif
-        if (lang === 'id') {
-            idBtn.style.borderColor = '#FFD700';
-            idBtn.style.color = '#FFD700';
-            idBtn.style.background = 'rgba(255,215,0,0.12)';
-            idBtn.classList.add('active');
-        } else {
-            enBtn.style.borderColor = '#FFD700';
-            enBtn.style.color = '#FFD700';
-            enBtn.style.background = 'rgba(255,215,0,0.12)';
-            enBtn.classList.add('active');
-        }
-    }
-
     // ── Terjemahan lengkap ────────────────────────────────
     const t = {
         id: {
