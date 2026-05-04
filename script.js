@@ -167,7 +167,33 @@ function uploadPhotoHTML(inputId, imgId, previewId, btnLabel, btnOnclick) {
 
         <div id="ai-result-area" style="margin-top:20px;"></div>`;
 }
-
+function showAIResult(containerId, outputUrl, filename) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = `
+        <p style="color:#FFD700;margin-bottom:10px;">✅ Hasil AI:</p>
+        <img src="${outputUrl}" style="width:100%;border-radius:12px;margin-bottom:15px;object-fit:contain;max-height:400px;background:#111;">
+        <div style="display:flex;gap:10px;">
+            <a href="${outputUrl}" download="${filename}.jpg" class="btn btn-gold shimmer-btn" style="flex:1;text-align:center;text-decoration:none;">⬇️ Unduh</a>
+            <button class="btn btn-ghost" style="flex:1;" onclick="window.open('https://api.whatsapp.com/send?text=Lihat hasilku dari LuxArc AI! ${encodeURIComponent(outputUrl)}','_blank')">📲 Bagikan WA</button>
+        </div>`;
+    lookbookImages.push(outputUrl);
+    setTimeout(() => {
+        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+    const inputIds = [
+        'user-photo-input','makeup-photo-input','hair-color-photo-input',
+        'skin-photo-input','acc-photo-input','enhance-photo-input',
+        'autodetect-photo-input','hat-photo-input','earring-photo-input'
+    ];
+    let beforeUrl = null;
+    for (const id of inputIds) {
+        const imgEl = document.getElementById(id.replace('-input', '-img'));
+        if (imgEl && imgEl.src && !imgEl.src.endsWith('/')) { beforeUrl = imgEl.src; break; }
+    }
+    if (beforeUrl) {
+        beforeAfterPairs.push({ before: beforeUrl, after: outputUrl, label: filename || 'AI Result' });
+    }
+}
 // Fungsi kamera khusus untuk modal AI
 function openCameraForAI(inputId, imgId, previewId) {
     const input = document.getElementById(inputId);
@@ -207,35 +233,37 @@ function previewPhoto(input, imgId, previewId) {
     }
 }
 
-function showAIResult(containerId, outputUrl, filename) {
-    const container = document.getElementById(containerId);
-    container.innerHTML = `
-        <p style="color:#FFD700;margin-bottom:10px;">✅ Hasil AI:</p>
-        <img src="${outputUrl}" style="width:100%;border-radius:12px;margin-bottom:15px;">
-        <div style="display:flex;gap:10px;">
-            <a href="${outputUrl}" download="${filename}.jpg" class="btn btn-gold shimmer-btn" style="flex:1;text-align:center;text-decoration:none;">⬇️ Unduh</a>
-            <button class="btn btn-ghost" style="flex:1;" onclick="window.open('https://api.whatsapp.com/send?text=Lihat hasilku dari LuxArc AI! ${encodeURIComponent(outputUrl)}','_blank')">📲 Bagikan WA</button>
-        </div>`;
-    lookbookImages.push(outputUrl);
+function uploadPhotoHTML(inputId, imgId, previewId, btnLabel, btnOnclick) {
+    return `
+        <div id="${previewId}" style="display:none;margin-bottom:12px;">
+            <img id="${imgId}" style="width:100%;border-radius:12px;max-height:350px;object-fit:contain;background:#111;">
+        </div>
 
-    setTimeout(() => {
-        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 100);
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
+            <button onclick="openCameraForAI('${inputId}','${imgId}','${previewId}')"
+                style="width:100%;padding:12px;border-radius:12px;
+                border:1.5px dashed #FFD700;background:transparent;
+                color:#FFD700;font-size:0.88em;font-family:inherit;
+                cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+                📸 Buka Kamera
+            </button>
+            <label style="width:100%;padding:12px;border-radius:12px;
+                border:1.5px dashed rgba(255,255,255,0.2);background:transparent;
+                color:#fff;font-size:0.88em;font-family:inherit;
+                cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+                🖼️ Pilih dari Galeri
+                <input type="file" accept="image/*" id="${inputId}"
+                    style="display:none;"
+                    onchange="previewPhoto(this,'${imgId}','${previewId}')">
+            </label>
+        </div>
 
-    // Simpan pasangan before/after
-    const inputIds = [
-        'user-photo-input','makeup-photo-input','hair-color-photo-input',
-        'skin-photo-input','acc-photo-input','enhance-photo-input',
-        'autodetect-photo-input','hat-photo-input','earring-photo-input'
-    ];
-    let beforeUrl = null;
-    for (const id of inputIds) {
-        const imgEl = document.getElementById(id.replace('-input', '-img'));
-        if (imgEl && imgEl.src && !imgEl.src.endsWith('/')) { beforeUrl = imgEl.src; break; }
-    }
-    if (beforeUrl) {
-        beforeAfterPairs.push({ before: beforeUrl, after: outputUrl, label: filename || 'AI Result' });
-    }
+        <button class="btn btn-gold shimmer-btn"
+            style="width:100%;padding:12px;" onclick="${btnOnclick}">
+            ${btnLabel}
+        </button>
+
+        <div id="ai-result-area" style="margin-top:20px;"></div>`;
 }
 
 function showAILoading(containerId, msg) {
