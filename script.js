@@ -842,10 +842,10 @@ async function sendToGroq(userMessage) {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Groq error');
-        return data.reply;
+        return { reply: data.reply, products: data.products || [] };
     } catch (err) {
         console.error('[Groq Chat Error]', err);
-        return 'Maaf, AI Advisor sedang tidak tersedia. Coba lagi ya! 😊';
+        return { reply: 'Maaf, AI Advisor sedang tidak tersedia. Coba lagi ya! 😊', products: [] };
     }
 }
 
