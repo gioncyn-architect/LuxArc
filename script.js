@@ -2263,3 +2263,100 @@ setTimeout(function() {
     }
   });
 }, 500);
+// ── ANALISIS KULIT PAGE ──
+let kulitImageBase64 = null;
+
+function kulitBukaKamera() {
+    const tempInput = document.createElement('input');
+    tempInput.type = 'file';
+    tempInput.accept = 'image/*';
+    tempInput.capture = 'environment';
+    tempInput.onchange = function() {
+        if (this.files && this.files[0]) {
+            kulitPreviewPhotoFromFile(this.files[0]);
+        }
+    };
+    tempInput.click();
+}
+
+function kulitPreviewPhoto(input) {
+    if (input.files && input.files[0]) {
+        kulitPreviewPhotoFromFile(input.files[0]);
+    }
+}
+
+function kulitPreviewPhotoFromFile(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        kulitImageBase64 = e.target.result;
+        const previewWrap = document.getElementById('kulit-preview-wrap');
+        const previewImg  = document.getElementById('kulit-preview-img');
+        const btnAnalisis = document.getElementById('kulit-btn-analisis');
+        if (previewImg)  previewImg.src = kulitImageBase64;
+        if (previewWrap) previewWrap.style.display = 'block';
+        if (btnAnalisis) btnAnalisis.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+async function jalankanAnalisisKulit() {
+    if (!kulitImageBase64) { toast('Upload foto dulu!', 'error'); return; }
+    const loadingEl = document.getElementById('kulit-state-loading');
+    const awalEl = document.getElementById('kulit-state-awal');
+    if (awalEl) awalEl.style.display = 'none';
+    if (loadingEl) loadingEl.style.display = 'block';
+    setTimeout(() => {
+        const bar = document.getElementById('kulit-progress-bar');
+        if (bar) bar.style.width = '90%';
+    }, 100);
+    try {
+        const userImageUrl = await uploadToImgBB(kulitImageBase64);
+        const res = await fetch('/api/youcam?action=skin-analysis', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_image_url: userImageUrl }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || 'Error');
+        if (loadingEl) loadingEl.style.display = 'none';
+        const hasilEl = document.getElementById('kulit-state-hasil');
+        if (hasilEl) hasilEl.style.display = 'block';
+        const scores = data?.data?.results || {};
+        let skorHTML = '';
+        const labels = { acne:'🔴 Jerawat', moisture:'💧 Kelembapan', pores:'⭕ Pori-pori', radiance:'✨ Kecerahan' };
+        for (const [key, label] of Object.entries(labels)) {
+            const raw = scores?.[key]?.score ?? scores?.[key] ?? null;
+            if (raw !== null) {
+                const pct = Math.min(100, Math.round(Number(raw)));
+                skorHTML += `<div style="margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;">
+                        <span style="color:#aaa;font-size:0.88em;">${label}</span>
+                        <span style="color:#FFD700;font-weight:600;">${pct}/100</span>
+                    </div>
+                    <div style="background:#333;border-radius:8px;height:6px;margin-top:4px;">
+                        <div style="background:#FFD700;border-radius:8px;height:6px;width:${pct}%;"></div>
+                    </div></div>`;
+            }
+        }
+        const skorContent = document.getElementById('kulit-skor-content');
+        if (skorContent) skorContent.innerHTML = skorHTML || '<p style="color:#aaa;">Analisis selesai! ✨</p>';
+        const tipeEl = document.getElementById('kulit-tipe-text');
+        if (tipeEl) tipeEl.textContent = '✨ Kulitmu dalam kondisi baik!';
+    } catch(err) {
+        if (loadingEl) loadingEl.style.display = 'none';
+        const errEl = document.getElementById('kulit-state-error');
+        const errMsg = document.getElementById('kulit-error-msg');
+        if (errEl) errEl.style.display = 'block';
+        if (errMsg) errMsg.textContent = err.message;
+    }
+}
+
+function kulitReset() {
+    kulitImageBase64 = null;
+    const ids = ['kulit-state-hasil','kulit-state-error','kulit-state-loading'];
+    ids.forEach(id => { const el = document.getElementById(id); if(el) el.style.display='none'; });
+    const awal = document.getElementById('kulit-state-awal');
+    if (awal) awal.style.display = 'block';
+    const bar = document.getElementById('kulit-progress-bar');
+    if (bar) bar.style.width = '0%';
+            }
