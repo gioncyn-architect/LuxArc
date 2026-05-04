@@ -940,20 +940,57 @@ async function sendChat() {
         return;
     }
 
-    appendTypingIndicator();
-    const reply = await sendToGroq(text);
-    removeTypingIndicator();
-    appendMessage('bot', reply);
+ appendTypingIndicator();
+const result = await sendToGroq(text);
+removeTypingIndicator();
+appendMessage('bot', result.reply);
 
-    groqChatHistory.push({ role: 'user', text });
-    groqChatHistory.push({ role: 'bot', text: reply });
+if (result.products && result.products.length > 0) {
+    renderAIProductCards(result.products);
+}
 
+groqChatHistory.push({ role: 'user', text });
+groqChatHistory.push({ role: 'bot', text: result.reply });
     if (groqChatHistory.length > 20) groqChatHistory = groqChatHistory.slice(-20);
 
     input.disabled = false;
     input.focus();
 }
-
+function renderAIProductCards(products) {
+    if (!products || products.length === 0) return;
+    products.forEach(product => {
+        let imgSrc = '';
+        let dataPrice = 0;
+        document.querySelectorAll('.product-card').forEach(card => {
+            const cardName = (card.getAttribute('data-name') || '').toLowerCase();
+            const prodName = product.name.toLowerCase();
+            if (cardName.includes(prodName.split(' ')[0]) ||
+                prodName.includes(cardName.split(' ')[0])) {
+                const img = card.querySelector('img');
+                if (img) imgSrc = img.src;
+                const priceEl = card.querySelector('[data-price]');
+                if (priceEl) dataPrice = parseInt(priceEl.getAttribute('data-price')) || 0;
+            }
+        });
+        const card = document.createElement('div');
+        card.className = 'ai-product-rec';
+        card.innerHTML = `
+            ${imgSrc
+                ? `<img src="${imgSrc}" alt="${product.name}">`
+                : `<span style="font-size:2em;">🛍️</span>`}
+            <div class="ai-product-rec-info">
+                <div class="ai-product-rec-name">${product.name}</div>
+                <div class="ai-product-rec-desc">${product.reason || ''}</div>
+                <div style="color:#FFD700;font-size:0.82em;font-weight:700;margin-bottom:6px;">${product.price}</div>
+                <div style="display:flex;gap:6px;">
+                    <button class="ai-product-rec-btn" onclick="addToCart('${product.name}', ${dataPrice})">🛒 + Keranjang</button>
+                    <button class="ai-product-rec-btn" onclick="askAIAbaoutProduct('${product.name}')">🤖 Detail</button>
+                </div>
+            </div>`;
+        chatHistory.appendChild(card);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    });
+}
 function askAIAbaoutProduct(productName) {
     switchPage('ai');
     setTimeout(() => {
