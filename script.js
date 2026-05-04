@@ -1712,7 +1712,18 @@ function filterProducts(category, btn) {
     });
     document.getElementById('product-count').innerText = `${count} produk`;
 }
-
+const skincareBanner = document.getElementById('skincare-analysis-banner');
+if (skincareBanner) {
+    skincareBanner.style.display = category === 'skincare' ? 'block' : 'none';
+}
+function triggerSkincareAnalysis() {
+    showAIModal('🔬 Analisis Kulit', `
+        <p style="color:#aaa;margin-bottom:15px;">Upload foto wajahmu, AI akan menganalisis dan merekomendasikan skincare yang tepat!</p>
+        ${uploadPhotoHTML('skin-photo-input','skin-photo-img','skin-photo-preview',
+            '🔬 Analisis Kulitku Sekarang',
+            'runSkinAnalysis("analisis")'
+        )}`);
+}
 // ── Camera ───────────────────────────────────────────────────
 async function openCamera(isAutoDetect = false) {
     const view = document.getElementById('camera-view');
