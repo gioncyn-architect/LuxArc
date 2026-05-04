@@ -579,7 +579,10 @@ button[onclick*="toggleLang"],
   cursor: pointer;
   min-width: 0;
 }
-
+.btn:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
+}
 .btn-ghost {
   background: var(--surface);
   border-color: rgba(255,255,255,0.1);
@@ -587,9 +590,10 @@ button[onclick*="toggleLang"],
 }
 
 .btn-ghost:hover {
-  background: var(--surface2);
-  border-color: var(--gold-border);
+  background: var(--gold-dim);
+  border-color: var(--gold);
   color: var(--gold);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.15);
 }
 
 .btn-white {
@@ -599,7 +603,9 @@ button[onclick*="toggleLang"],
 }
 
 .btn-white:hover {
-  background: rgba(255,255,255,0.14);
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .btn-gold {
@@ -612,7 +618,13 @@ button[onclick*="toggleLang"],
 
 .btn-gold:hover {
   background: #ffe033;
-  box-shadow: 0 4px 16px rgba(255,215,0,0.3);
+  box-shadow: 0 0 18px rgba(255, 215, 0, 0.45), 0 4px 12px rgba(0,0,0,0.3);
+  transform: translateY(-1px);
+}
+
+.btn-gold:active {
+  transform: scale(0.96) translateY(0);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
 }
 
 .shimmer-btn {
