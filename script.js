@@ -131,17 +131,69 @@ function showAIModal(title, html) {
 
 function uploadPhotoHTML(inputId, imgId, previewId, btnLabel, btnOnclick) {
     return `
-        <label style="display:block;background:#1a1a1a;border:1.5px dashed #FFD700;border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:15px;">
-            📷 Pilih Foto Dirimu
-            <input type="file" accept="image/*" id="${inputId}" style="display:none;" onchange="previewPhoto(this,'${imgId}','${previewId}')">
-        </label>
-        <div id="${previewId}" style="display:none;margin-bottom:15px;">
-            <img id="${imgId}" style="width:100%;border-radius:12px;max-height:160px;object-fit:cover;">
+        <div id="${previewId}" style="display:none;margin-bottom:12px;">
+            <img id="${imgId}" style="width:100%;border-radius:12px;max-height:200px;object-fit:cover;">
         </div>
-        <button class="btn btn-gold shimmer-btn" style="width:100%;" onclick="${btnOnclick}">
+
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
+
+            <!-- Tombol Buka Kamera -->
+            <button onclick="openCameraForAI('${inputId}','${imgId}','${previewId}')"
+                style="width:100%;padding:12px;border-radius:12px;
+                border:1.5px dashed #FFD700;background:transparent;
+                color:#FFD700;font-size:0.88em;font-family:inherit;
+                cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+                📸 Buka Kamera
+            </button>
+
+            <!-- Tombol Pilih dari Galeri -->
+            <label style="width:100%;padding:12px;border-radius:12px;
+                border:1.5px dashed rgba(255,255,255,0.2);background:transparent;
+                color:#fff;font-size:0.88em;font-family:inherit;
+                cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+                🖼️ Pilih dari Galeri
+                <input type="file" accept="image/*" id="${inputId}"
+                    style="display:none;"
+                    onchange="previewPhoto(this,'${imgId}','${previewId}')">
+            </label>
+
+        </div>
+
+        <!-- Tombol Coba AI -->
+        <button class="btn btn-gold shimmer-btn"
+            style="width:100%;padding:12px;" onclick="${btnOnclick}">
             ${btnLabel}
         </button>
+
         <div id="ai-result-area" style="margin-top:20px;"></div>`;
+}
+
+// Fungsi kamera khusus untuk modal AI
+function openCameraForAI(inputId, imgId, previewId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    // Buat input file sementara dengan capture=camera
+    const tempInput = document.createElement('input');
+    tempInput.type = 'file';
+    tempInput.accept = 'image/*';
+    tempInput.capture = 'environment';
+    tempInput.onchange = function() {
+        if (this.files && this.files[0]) {
+            // Pindahkan file ke input asli
+            const dt = new DataTransfer();
+            dt.items.add(this.files[0]);
+            input.files = dt.files;
+            // Preview
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById(imgId).src = e.target.result;
+                document.getElementById(previewId).style.display = 'block';
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+    };
+    tempInput.click();
 }
 
 function previewPhoto(input, imgId, previewId) {
