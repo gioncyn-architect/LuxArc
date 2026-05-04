@@ -961,6 +961,8 @@ function renderAIProductCards(products) {
     products.forEach(product => {
         let imgSrc = '';
         let dataPrice = 0;
+        let targetCard = null;
+
         document.querySelectorAll('.product-card').forEach(card => {
             const cardName = (card.getAttribute('data-name') || '').toLowerCase();
             const prodName = product.name.toLowerCase();
@@ -970,7 +972,51 @@ function renderAIProductCards(products) {
                 if (img) imgSrc = img.src;
                 const priceEl = card.querySelector('[data-price]');
                 if (priceEl) dataPrice = parseInt(priceEl.getAttribute('data-price')) || 0;
+                targetCard = card;
             }
+        });
+
+        // Ambil tombol "Coba AI" dari kartu asli
+        let tryAIBtn = '';
+        if (targetCard) {
+            const ghostBtn = targetCard.querySelector('.btn-ghost');
+            if (ghostBtn) {
+                tryAIBtn = `<button class="ai-product-rec-btn" style="background:rgba(255,215,0,0.15);border-color:#FFD700;color:#FFD700;"
+                    onclick="${ghostBtn.getAttribute('onclick')}">
+                    ${ghostBtn.textContent.trim()}
+                </button>`;
+            }
+        }
+
+        const card = document.createElement('div');
+        card.className = 'ai-product-rec';
+        card.style.cursor = 'pointer';
+        card.innerHTML = `
+            ${imgSrc
+                ? `<img src="${imgSrc}" alt="${product.name}">`
+                : `<span style="font-size:2em;">🛍️</span>`}
+            <div class="ai-product-rec-info">
+                <div class="ai-product-rec-name">${product.name}</div>
+                <div class="ai-product-rec-desc">${product.reason || ''}</div>
+                <div style="color:#FFD700;font-size:0.82em;font-weight:700;margin-bottom:6px;">
+                    ${product.price}
+                </div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    ${tryAIBtn}
+                    <button class="ai-product-rec-btn"
+                        onclick="addToCart('${product.name}', ${dataPrice})">
+                        🛒 + Keranjang
+                    </button>
+                    <button class="ai-product-rec-btn"
+                        onclick="switchPage('beranda');setTimeout(()=>{const el=document.querySelector('[data-name*=\\'${product.name.split(' ')[0].toLowerCase()}\\']');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});}},400);">
+                        👁 Lihat Produk
+                    </button>
+                </div>
+            </div>`;
+        chatHistory.appendChild(card);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    });
+}
         });
         const card = document.createElement('div');
         card.className = 'ai-product-rec';
