@@ -585,7 +585,7 @@ async function runSkinAnalysis(productName) {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || JSON.stringify(data));
 
-        const scores = data?.data?.results || data?.data?.data?.results || {};
+        const scores = data?.data?.results || {};
         const labels = {
             acne: '🔴 Jerawat', moisture: '💧 Kelembapan',
             pores: '⭕ Pori-pori', wrinkles: '〰️ Kerutan',
@@ -2472,9 +2472,9 @@ function kulitTampilHasil(scores) {
   if (!hasScore) skorHTML = '<p style="color:#aaa;text-align:center;">Analisis selesai ✨</p>';
   document.getElementById('kulit-skor-content').innerHTML = skorHTML;
 
-  const acne     = Number(scores?.acne?.score     ?? scores?.acne     ?? 50);
-  const moisture = Number(scores?.moisture?.score  ?? scores?.moisture  ?? 50);
-  const radiance = Number(scores?.radiance?.score  ?? scores?.radiance  ?? 50);
+  const acne     = Number(scores?.acne?.score     ?? 50);
+const moisture = Number(scores?.moisture?.score  ?? 50);
+const radiance = Number(scores?.radiance?.score  ?? 50);
 
   let tipeKulit = '';
   let produkRek = [];
