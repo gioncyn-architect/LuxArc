@@ -585,7 +585,14 @@ async function runSkinAnalysis(productName) {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || JSON.stringify(data));
 
-        const scores = data?.data?.results || {};
+        const r = data?.data?.results || data?.data || data || {};
+const scores = {
+  acne:     { score: r?.acne?.score     ?? r?.acne     ?? null },
+  moisture: { score: r?.moisture?.score ?? r?.moisture ?? null },
+  pores:    { score: r?.pore?.score     ?? r?.pore     ?? null },
+  wrinkles: { score: r?.wrinkle?.score  ?? r?.wrinkle  ?? null },
+  radiance: { score: r?.radiance?.score ?? r?.radiance ?? null },
+};
         const labels = {
             acne: '🔴 Jerawat', moisture: '💧 Kelembapan',
             pores: '⭕ Pori-pori', wrinkles: '〰️ Kerutan',
@@ -1123,15 +1130,18 @@ async function runAutoDetectAnalysis() {
             throw new Error(data?.error || data?.message || `Server error ${res.status}`);
         }
 
-        const scores = data?.data?.results
-            || data?.data?.data?.results
-            || data?.results
-            || {};
+       const r = data?.data?.results || data?.data || data || {};
+const scores = {
+  acne:     { score: r?.acne?.score     ?? r?.acne     ?? null },
+  moisture: { score: r?.moisture?.score ?? r?.moisture ?? null },
+  pores:    { score: r?.pore?.score     ?? r?.pore     ?? null },
+  wrinkles: { score: r?.wrinkle?.score  ?? r?.wrinkle  ?? null },
+  radiance: { score: r?.radiance?.score ?? r?.radiance ?? null },
+}; 
 
-        const acne     = Number(scores?.acne?.score     ?? scores?.acne     ?? 80);
-        const moisture = Number(scores?.moisture?.score  ?? scores?.moisture  ?? 50);
-        const radiance = Number(scores?.radiance?.score  ?? scores?.radiance  ?? 50);
-
+        const acne     = Number(scores?.acne?.score     ?? 80);
+const moisture = Number(scores?.moisture?.score  ?? 50);
+const radiance = Number(scores?.radiance?.score  ?? 50);
         let skinType = '';
         let recommendations = [];
 
