@@ -72,27 +72,76 @@ HAIR COLOR:
 - Cat Rambut Premium (AI Hair Color Try-On) - Rp 125.000
 `;
 
-const SYSTEM_PROMPT = `You are LuxArc AI Style Advisor — a personal stylist AI for LuxArc AI fashion platform.
+const SYSTEM_PROMPT = `You are LuxArc AI Style Advisor — a warm, friendly personal stylist for LuxArc AI fashion platform.
 
-LANGUAGE RULE — THIS IS THE MOST IMPORTANT RULE:
-- If user message is in English → YOU MUST reply in English ONLY
-- If user message is in Indonesian → reply in Indonesian ONLY
-- NEVER mix languages in your response
-- This rule OVERRIDES everything else
+LANGUAGE DETECTION — MOST IMPORTANT RULE:
+- Detect the language of the user's message automatically
+- If user writes in Indonesian (contains words like: aku, saya, kamu, mau, yang, dan, ke, ini, itu, tidak, bisa, untuk, dengan, ada, apa, ya, dong, deh, nih, gaun, baju, pakai, pesta, cocok, bagus) → reply in INDONESIAN ONLY
+- If user writes in English → reply in ENGLISH ONLY
+- NEVER mix languages — this is critical
+- When in doubt → use Indonesian as default
+
+PERSONALITY:
+- Warm and friendly like a best friend who knows fashion
+- Honest — give real opinions, not just compliments
+- Natural — talk like a real person, not a robot or salesperson
+- Never pushy or spammy
 
 IMPORTANT RULES:
-1. ALWAYS reply in the SAME language as the user
+1. Always reply in the SAME language as the user — auto detect it
 2. Be natural and conversational — like a friendly stylist friend
 3. Only recommend products when TRULY relevant to the question
-4. If user asks about a specific product → give detailed honest opinion
-5. If user asks general fashion advice → give advice first, products second
-6. Maximum 2 product recommendations per response — only if relevant
-7. Never list all products at once — feels pushy
-8. Be warm, honest, and helpful — not salesy
-9. If user just wants to chat → just chat, no need to push products
-10. Stay on topic: fashion, beauty, style tips only
+4. If user asks about a specific product → give detailed honest opinion about it
+5. If user asks for outfit advice → give fashion advice first, then suggest 1-2 products max
+6. Maximum 2 product recommendations per response — only if truly relevant
+7. Never list all products at once — that feels pushy and salesy
+8. Be warm, honest, and helpful — not like a salesperson
+9. If user just wants to chat → just chat naturally, no need to push products
+10. Stay on topic: fashion, beauty, style tips, and LuxArc products only
+
+PRODUCT RECOMMENDATION FORMAT:
+- When you want to recommend a product, ALWAYS end your message with a special JSON block
+- This JSON will be used to show product cards to the user
+- Format exactly like this (at the very end of your message):
+
+[PRODUCTS]
+{
+  "products": [
+    {
+      "name": "exact product name from catalog",
+      "price": "Rp 000.000",
+      "reason": "short reason why this suits them (1 sentence)"
+    }
+  ]
+}
+[/PRODUCTS]
+
+- Only include this JSON block when recommending products
+- If just chatting or answering general questions → do NOT include the JSON block
+- Maximum 2 products in the JSON block
 
 ${LUXARC_PRODUCTS}`;
+
+// Language detection function
+function detectLanguage(message) {
+  const indonesianWords = [
+    'aku', 'saya', 'kamu', 'yang', 'dan', 'di', 'ke', 'ini', 'itu',
+    'mau', 'tidak', 'bisa', 'untuk', 'dengan', 'ada', 'apa', 'ya',
+    'dong', 'deh', 'nih', 'loh', 'banget', 'gaun', 'baju', 'pakai',
+    'pesta', 'cocok', 'bagus', 'gimana', 'boleh', 'perlu', 'butuh',
+    'ingin', 'pengen', 'coba', 'lihat', 'pilih', 'suka', 'harga',
+    'murah', 'mahal', 'warna', 'ukuran', 'pas', 'sesuai', 'acara',
+    'kondangan', 'kerja', 'santai', 'formal', 'casual', 'hari', 'malam',
+    'pagi', 'cantik', 'keren', 'bagaimana', 'kalau', 'jika', 'atau',
+    'tapi', 'karena', 'jadi', 'sudah', 'belum', 'sedang', 'akan'
+  ];
+  const msgLower = message.toLowerCase();
+  const foundWords = indonesianWords.filter(word => {
+    const regex = new RegExp(`\\b${word}\\b`, 'i');
+    return regex.test(msgLower);
+  });
+  return foundWords.length >= 1 ? 'id' : 'en';
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -100,7 +149,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Metode tidak diizinkan' });
   }
 
   const groqKey = process.env.GROQ_API_KEY;
@@ -117,11 +166,11 @@ export default async function handler(req, res) {
   const { message, history = [], gender = null } = body;
   if (!message) return res.status(400).json({ error: 'message required' });
 
-  // Deteksi bahasa dari pesan user
-  const isEnglish = /[a-zA-Z]/.test(message) && !/[\u00C0-\u024F]/.test(message);
-  const langInstruction = isEnglish
-    ? 'The user is writing in ENGLISH. You MUST respond in ENGLISH only.'
-    : 'The user is writing in INDONESIAN. You MUST respond in INDONESIAN only.';
+  // Auto detect language
+  const lang = detectLanguage(message);
+  const langInstruction = lang === 'id'
+    ? 'DETECTED LANGUAGE: Indonesian. You MUST reply in INDONESIAN (Bahasa Indonesia) only. Do not use any English words.'
+    : 'DETECTED LANGUAGE: English. You MUST reply in ENGLISH only. Do not use any Indonesian words.';
 
   try {
     const messages = [
@@ -132,10 +181,11 @@ export default async function handler(req, res) {
     if (gender) {
       messages.push({
         role: 'system',
-        content: `User gender: ${gender === 'female' ? 'FEMALE — recommend women products' : 'MALE — recommend men products'}`
+        content: `User gender: ${gender === 'female' ? 'FEMALE — prioritize women products' : 'MALE — prioritize men products (Blazer Pria, Jaket Denim, Topi)'}`
       });
     }
 
+    // Include recent chat history
     const recentHistory = history.slice(-6);
     for (const h of recentHistory) {
       if (h.role && h.text) {
@@ -157,7 +207,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
         messages,
-        temperature: 0.7,
+        temperature: 0.75,
         max_tokens: 500,
         top_p: 0.9,
       }),
@@ -171,11 +221,28 @@ export default async function handler(req, res) {
       });
     }
 
-    const replyText =
-      groqData?.choices?.[0]?.message?.content ||
-      'Sorry, please try again! ✨';
+    let replyText = groqData?.choices?.[0]?.message?.content || 'Maaf, coba lagi ya! ✨';
 
-    return res.status(200).json({ success: true, reply: replyText });
+    // Parse product recommendations from reply
+    let products = [];
+    const productMatch = replyText.match(/\[PRODUCTS\]([\s\S]*?)\[\/PRODUCTS\]/);
+    if (productMatch) {
+      try {
+        const parsed = JSON.parse(productMatch[1].trim());
+        products = parsed.products || [];
+      } catch (e) {
+        products = [];
+      }
+      // Remove the JSON block from the reply text
+      replyText = replyText.replace(/\[PRODUCTS\][\s\S]*?\[\/PRODUCTS\]/, '').trim();
+    }
+
+    return res.status(200).json({
+      success: true,
+      reply: replyText,
+      products: products,
+      lang: lang,
+    });
 
   } catch (err) {
     return res.status(500).json({ error: err.message || 'Server error' });
