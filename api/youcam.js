@@ -192,8 +192,15 @@ export default async function handler(req, res) {
       if (!result) {
         return res.status(500).json({ error: 'Skin analysis selesai tapi result kosong' });
       }
-console.log('SKIN RESULT:', JSON.stringify(result).slice(0, 500));
-return res.status(200).json(result);
+const output = result?.data?.results?.output || [];
+const mapped = {};
+output.forEach(item => {
+  if (item.action) mapped[item.action] = { score: item.ui_score };
+});
+return res.status(200).json({
+  status: 200,
+  data: { results: mapped }
+});
     }
 
     // ── 2. AI Clothes V3.0 ──────────────────────────────────
