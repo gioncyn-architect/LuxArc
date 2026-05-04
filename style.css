@@ -588,6 +588,35 @@ button[onclick*="toggleLang"],
   border-color: rgba(255,255,255,0.1);
   color: var(--text);
 }
+.btn-ghost.btn-live {
+  background: rgba(255, 215, 0, 0.06);
+  border-color: rgba(255, 215, 0, 0.4);
+  color: var(--gold);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.15);
+  animation: livePulse 2.5s ease-in-out infinite;
+}
+
+.btn-ghost.btn-live::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,215,0,0.2), transparent);
+  animation: liveShimmer 2s linear infinite;
+}
+
+@keyframes liveShimmer {
+  to { left: 160%; }
+}
+
+@keyframes livePulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(255,215,0,0.15); }
+  50% { box-shadow: 0 0 18px rgba(255,215,0,0.35); }
+}
 
 .btn-ghost:hover {
   background: var(--gold-dim);
