@@ -2221,7 +2221,7 @@ document.addEventListener('click', function(e) {
   setTimeout(() => circle.remove(), 500);
 });
 // ── Auto add btn-live class ──
-document.addEventListener('DOMContentLoaded', function() {
+setTimeout(function() {
   document.querySelectorAll('.btn-ghost').forEach(btn => {
     const text = btn.textContent.trim();
     if (
@@ -2238,4 +2238,4 @@ document.addEventListener('DOMContentLoaded', function() {
       btn.classList.add('btn-live');
     }
   });
-});
+}, 500);
