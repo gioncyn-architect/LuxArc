@@ -2336,7 +2336,7 @@ document.addEventListener('click', function(e) {
     left:${e.clientX - rect.left - size/2}px;
     top:${e.clientY - rect.top - size/2}px;
     transform:scale(0);
-    animation:ripple-anim 0.5s ease-out forwards;
+    animation:ripple-anim 0.5s ease-out forwards;y
     pointer-events:none;
   `;
   btn.appendChild(circle);
@@ -2374,3 +2374,171 @@ setTimeout(function() {
     }
   });
 }, 500);
+// ════════════════════════════════════════════
+// HALAMAN ANALISIS KULIT — Standalone
+// ════════════════════════════════════════════
+
+function kulitPreviewPhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('kulit-preview-img').src = e.target.result;
+    document.getElementById('kulit-preview-wrap').style.display = 'block';
+    document.getElementById('kulit-btn-analisis').style.display = 'block';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function kulitBukaKamera() {
+  const temp = document.createElement('input');
+  temp.type = 'file';
+  temp.accept = 'image/*';
+  temp.capture = 'environment';
+  temp.onchange = function() {
+    if (this.files && this.files[0]) {
+      const dt = new DataTransfer();
+      dt.items.add(this.files[0]);
+      document.getElementById('kulit-photo-input').files = dt.files;
+      kulitPreviewPhoto(document.getElementById('kulit-photo-input'));
+    }
+  };
+  temp.click();
+}
+
+function kulitTampilState(state) {
+  ['awal','loading','hasil','error'].forEach(s => {
+    const el = document.getElementById('kulit-state-' + s);
+    if (el) el.style.display = s === state ? 'block' : 'none';
+  });
+}
+
+async function jalankanAnalisisKulit() {
+  const input = document.getElementById('kulit-photo-input');
+  if (!input.files || !input.files[0]) {
+    toast('Upload foto dulu!', 'error');
+    return;
+  }
+  kulitTampilState('loading');
+  setTimeout(() => {
+    const bar = document.getElementById('kulit-progress-bar');
+    if (bar) bar.style.width = '90%';
+  }, 100);
+  try {
+    const base64 = await fileToBase64(input.files[0]);
+    const imageUrl = await uploadToImgBB(base64);
+    const res = await fetch('/api/youcam?action=skin-analysis', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_image_url: imageUrl }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gagal analisis');
+    const scores = data?.data?.results || data?.data?.data?.results || data?.results || {};
+    kulitTampilHasil(scores);
+  } catch (err) {
+    kulitTampilState('error');
+    document.getElementById('kulit-error-msg').textContent = err.message;
+  }
+}
+
+function kulitTampilHasil(scores) {
+  kulitTampilState('hasil');
+  const labels = {
+    acne:     '🔴 Jerawat',
+    moisture: '💧 Kelembapan',
+    pores:    '⭕ Pori-pori',
+    wrinkles: '〰️ Kerutan',
+    radiance: '✨ Kecerahan',
+  };
+  let skorHTML = '';
+  let hasScore = false;
+  for (const [key, label] of Object.entries(labels)) {
+    const raw = scores?.[key]?.score ?? scores?.[key] ?? null;
+    if (raw !== null) {
+      hasScore = true;
+      const pct = Math.min(100, Math.round(Number(raw)));
+      skorHTML += `
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+            <span style="color:#aaa;font-size:0.85em;">${label}</span>
+            <span style="color:#FFD700;font-weight:700;font-size:0.85em;">${pct}/100</span>
+          </div>
+          <div style="background:#2a2a2a;border-radius:8px;height:6px;">
+            <div style="background:linear-gradient(90deg,#FFD700,#fffae6);border-radius:8px;height:6px;width:${pct}%;"></div>
+          </div>
+        </div>`;
+    }
+  }
+  if (!hasScore) skorHTML = '<p style="color:#aaa;text-align:center;">Analisis selesai ✨</p>';
+  document.getElementById('kulit-skor-content').innerHTML = skorHTML;
+
+  const acne     = Number(scores?.acne?.score     ?? scores?.acne     ?? 50);
+  const moisture = Number(scores?.moisture?.score  ?? scores?.moisture  ?? 50);
+  const radiance = Number(scores?.radiance?.score  ?? scores?.radiance  ?? 50);
+
+  let tipeKulit = '';
+  let produkRek = [];
+
+  if (acne > 60) {
+    tipeKulit = '⚠️ Kulit berjerawat — butuh perawatan khusus';
+    produkRek = [
+      { id:'p13', nama:'Skincare Jerawat',  harga:195000, alasan:'Formula anti-jerawat efektif' },
+      { id:'p33', nama:'Serum Niacinamide', harga:165000, alasan:'Kontrol pori & minyak berlebih' },
+      { id:'p37', nama:'Clay Mask',         harga:95000,  alasan:'Bersihkan pori mendalam' },
+    ];
+  } else if (moisture < 40) {
+    tipeKulit = '💧 Kulit kering — butuh hidrasi ekstra';
+    produkRek = [
+      { id:'p35', nama:'Moisturizer Gel', harga:175000, alasan:'Hidrasi intensif untuk kulit kering' },
+      { id:'p36', nama:'Toner AHA BHA',   harga:145000, alasan:'Eksfoliasi & hidrasi sekaligus' },
+    ];
+  } else if (radiance < 50) {
+    tipeKulit = '🌑 Kulit kusam — butuh pencerahan';
+    produkRek = [
+      { id:'p14', nama:'Skincare Pemutih', harga:215000, alasan:'Brightening & glow booster' },
+      { id:'p34', nama:'Sunscreen SPF 50', harga:125000, alasan:'Proteksi UV agar tidak kusam' },
+    ];
+  } else {
+    tipeKulit = '😊 Kulit normal & seimbang!';
+    produkRek = [
+      { id:'p34', nama:'Sunscreen SPF 50', harga:125000, alasan:'Proteksi harian wajib' },
+      { id:'p35', nama:'Moisturizer Gel',  harga:175000, alasan:'Jaga keseimbangan kulit' },
+    ];
+  }
+
+  document.getElementById('kulit-tipe-text').textContent = tipeKulit;
+
+  const listEl = document.getElementById('kulit-produk-list');
+  listEl.innerHTML = '';
+  produkRek.forEach(p => {
+    let imgSrc = '';
+    document.querySelectorAll('.product-card').forEach(card => {
+      if (card.getAttribute('data-id') === p.id) {
+        const img = card.querySelector('img');
+        if (img) imgSrc = img.src;
+      }
+    });
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;gap:12px;align-items:center;padding:12px;background:#111;border:1.5px solid rgba(255,215,0,0.15);border-radius:14px;';
+    div.innerHTML = `
+      ${imgSrc ? `<img src="${imgSrc}" style="width:64px;height:64px;object-fit:cover;border-radius:10px;flex-shrink:0;">` : '<span style="font-size:2em;">🧴</span>'}
+      <div style="flex:1;min-width:0;">
+        <p style="color:#fff;font-weight:600;font-size:0.9em;margin:0 0 3px;">${p.nama}</p>
+        <p style="color:#aaa;font-size:0.76em;margin:0 0 6px;">${p.alasan}</p>
+        <p style="color:#FFD700;font-weight:700;font-size:0.85em;margin:0 0 8px;">Rp ${formatRupiah(p.harga)}</p>
+        <button onclick="addToCart('${p.nama}',${p.harga})" style="padding:6px 14px;border-radius:8px;border:1.5px solid #FFD700;background:rgba(255,215,0,0.1);color:#FFD700;font-size:0.76em;font-family:inherit;cursor:pointer;">
+          + Keranjang
+        </button>
+      </div>`;
+    listEl.appendChild(div);
+  });
+}
+
+function kulitReset() {
+  kulitTampilState('awal');
+  document.getElementById('kulit-preview-wrap').style.display = 'none';
+  document.getElementById('kulit-btn-analisis').style.display = 'none';
+  document.getElementById('kulit-photo-input').value = '';
+  const bar = document.getElementById('kulit-progress-bar');
+  if (bar) bar.style.width = '0%';
+}
