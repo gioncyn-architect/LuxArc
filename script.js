@@ -2293,8 +2293,6 @@ function setLanguage(lang) {
 }
     
     }
-}
-
 function setCurrency(curr) {
     currentCurrency = curr;
     const idrBtn = document.getElementById('curr-idr-btn');
