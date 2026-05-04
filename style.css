@@ -475,7 +475,7 @@ button[onclick*="toggleLang"],
 }
 
 .product-sub {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   margin-top: 1px;
   white-space: nowrap;
@@ -484,12 +484,13 @@ button[onclick*="toggleLang"],
 }
 
 .stock-tag {
-  font-size: 0.58rem;
+  font-size: 0.65rem;
   font-weight: 600;
-  padding: 2px 5px;
+  padding: 2px 6px;
   border-radius: 5px;
   flex-shrink: 0;
   white-space: nowrap;
+  font-family: 'DM Sans', sans-serif;
 }
 
 .stock-tag.in {
@@ -504,13 +505,13 @@ button[onclick*="toggleLang"],
 }
 
 .stars {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   color: var(--gold);
   letter-spacing: -0.03em;
 }
 
 .rating-count {
-  font-size: 0.62rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
 }
 
@@ -567,7 +568,7 @@ button[onclick*="toggleLang"],
   justify-content: center;
   padding: 6px 4px;
   border-radius: var(--radius-sm);
-  font-size: 0.62rem;
+  font-size: 0.68rem;
   font-weight: 500;
   transition: var(--transition);
   white-space: nowrap;
