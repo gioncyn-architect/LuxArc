@@ -1702,6 +1702,16 @@ function addToCart(name, price) {
     const safePrice = typeof price === 'number' ? price : parseInt(String(price).replace(/\D/g,''), 10) || 0;
     cart.push({ name, price: safePrice });
     syncCartBadge();
+    // Efek btn-cart added
+document.querySelectorAll('.btn-cart').forEach(btn => {
+  const orig = btn.innerHTML;
+  btn.innerHTML = '✓ Ditambahkan!';
+  btn.classList.add('added');
+  setTimeout(() => {
+    btn.innerHTML = orig;
+    btn.classList.remove('added');
+  }, 1500);
+});
     toast(`🛒 ${name} ${translations[currentLang].toastCart}`);
     if (document.getElementById('page-keranjang')?.classList.contains('active')) renderCartPage();
 }
@@ -2236,6 +2246,19 @@ setTimeout(function() {
       text.includes('Coba Warna')
     ) {
       btn.classList.add('btn-live');
+    }
+  });
+}, 500);
+// ── Auto add btn-cart class ──
+setTimeout(function() {
+  document.querySelectorAll('.btn-white').forEach(btn => {
+    const text = btn.textContent.trim();
+    if (
+      text.includes('Keranjang') ||
+      text.includes('Add to Cart') ||
+      text.includes('+ Keranjang')
+    ) {
+      btn.classList.add('btn-cart');
     }
   });
 }, 500);
