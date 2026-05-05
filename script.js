@@ -2341,7 +2341,61 @@ async function jalankanAnalisisKulit() {
         const skorContent = document.getElementById('kulit-skor-content');
         if (skorContent) skorContent.innerHTML = skorHTML || '<p style="color:#aaa;">Analisis selesai! ✨</p>';
         const tipeEl = document.getElementById('kulit-tipe-text');
-        if (tipeEl) tipeEl.textContent = '✨ Kulitmu dalam kondisi baik!';
+        const acne = Number(scores?.acne?.score ?? scores?.acne ?? 50);
+const moisture = Number(scores?.moisture?.score ?? scores?.moisture ?? 50);
+const radiance = Number(scores?.radiance?.score ?? scores?.radiance ?? 50);
+let tipeKulit = '';
+let rekoProduk = [];
+if (acne < 40) {
+    tipeKulit = '⚠️ Kulit Berjerawat — butuh perawatan extra';
+    rekoProduk = [
+        { name:'Skincare Jerawat', price:195000, img:'skincare-jerawat.jpg' },
+        { name:'Serum Niacinamide', price:165000, img:'serum-niacinamide.jpg' },
+        { name:'Clay Mask', price:95000, img:'clay-mask.jpg' },
+    ];
+} else if (moisture < 40) {
+    tipeKulit = '💧 Kulit Kering — butuh hidrasi intensif';
+    rekoProduk = [
+        { name:'Moisturizer Gel', price:175000, img:'moisturizer-gel.jpg' },
+        { name:'Skincare Pemutih', price:215000, img:'skincare-pemutih.jpg' },
+        { name:'Toner AHA BHA', price:145000, img:'toner-aha-bha.jpg' },
+    ];
+} else if (radiance > 70) {
+    tipeKulit = '✨ Kulit Cerah & Sehat — pertahankan rutinitas!';
+    rekoProduk = [
+        { name:'Sunscreen SPF 50', price:125000, img:'sunscreen-spf50.jpg' },
+        { name:'Toner AHA BHA', price:145000, img:'toner-aha-bha.jpg' },
+        { name:'Serum Niacinamide', price:165000, img:'serum-niacinamide.jpg' },
+    ];
+} else {
+    tipeKulit = '😊 Kulit Normal & Seimbang — jaga konsistensi!';
+    rekoProduk = [
+        { name:'Sunscreen SPF 50', price:125000, img:'sunscreen-spf50.jpg' },
+        { name:'Moisturizer Gel', price:175000, img:'moisturizer-gel.jpg' },
+        { name:'Clay Mask', price:95000, img:'clay-mask.jpg' },
+    ];
+}
+if (tipeEl) tipeEl.textContent = tipeKulit;
+const produkList = document.getElementById('kulit-produk-list');
+if (produkList) {
+    produkList.innerHTML = rekoProduk.map(p => `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px;
+            background:#111;border:1px solid rgba(255,215,0,0.15);border-radius:12px;">
+            <img src="${p.img}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;flex-shrink:0;">
+            <div style="flex:1;">
+                <div style="color:#fff;font-size:0.9em;font-weight:600;">${p.name}</div>
+                <div style="color:#FFD700;font-size:0.82em;margin-top:2px;">Rp ${formatRupiah(p.price)}</div>
+            </div>
+            <button onclick="addToCart('${p.name}',${p.price})"
+                style="padding:7px 12px;border-radius:8px;border:none;
+                background:linear-gradient(135deg,#FFD700,#e6c200);
+                color:#000;font-size:0.78em;font-weight:700;cursor:pointer;">
+                + Keranjang
+            </button>
+        </div>`).join('');
+}
+const bar = document.getElementById('kulit-progress-bar');
+if (bar) bar.style.width = '100%';
     } catch(err) {
         if (loadingEl) loadingEl.style.display = 'none';
         const errEl = document.getElementById('kulit-state-error');
@@ -2350,7 +2404,9 @@ async function jalankanAnalisisKulit() {
         if (errMsg) errMsg.textContent = err.message;
     }
 }
-
+function triggerSkincareAnalysis() {
+    switchPage('kulit');
+}
 function kulitReset() {
     kulitImageBase64 = null;
     const ids = ['kulit-state-hasil','kulit-state-error','kulit-state-loading'];
