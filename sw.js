@@ -7,8 +7,8 @@
 //   - Font CDN   → Stale While Revalidate
 // ============================================================
 
-const CACHE_NAME = 'luxarc-shell-v3';
-const RUNTIME_CACHE = 'luxarc-runtime-v3';
+const CACHE_NAME = 'luxarc-shell-v4';
+const RUNTIME_CACHE = 'luxarc-runtime-v4';
 
 // ── App Shell: di-cache saat install ────────────────────────
 const PRECACHE_ASSETS = [
